@@ -28,14 +28,12 @@ body{
     box-shadow:0 35px 70px rgba(0,0,0,.75)
 }
 
-/* GRID */
 .grid{
     display:grid;
     grid-template-columns:1fr 1fr;
     gap:14px
 }
 
-/* CARD */
 .card{
     position:relative;
     background:rgba(255,255,255,.04);
@@ -71,7 +69,6 @@ button{
 button:hover{transform:translateY(-1px)}
 button:active{transform:translateY(1px)}
 
-/* SETTINGS */
 .settings-btn{
     position:absolute;
     top:8px;
@@ -83,6 +80,7 @@ button:active{transform:translateY(1px)}
     background:rgba(255,255,255,.12);
     color:#fff;
 }
+
 .settings{
     display:none;
     margin-top:8px;
@@ -93,7 +91,6 @@ button:active{transform:translateY(1px)}
     text-align:left
 }
 .settings label{display:block;margin-bottom:6px}
-.settings input{width:100%;padding:6px;border-radius:8px;border:none}
 
 /* ANIMATIONS */
 .coin.toss{animation:coinToss 1s ease-in-out}
@@ -117,15 +114,57 @@ button:active{transform:translateY(1px)}
     opacity:0;
     transform:translateY(10px);
     transition:.3s;
-    white-space:normal;
-    overflow-wrap:anywhere;
-    text-align:center;
 }
 .log.show{opacity:1;transform:translateY(0)}
 .movie{color:#ffd66b;font-weight:600}
 
-/* wheel log left aligned */
-#wheelLog{ text-align:left; }
+#wheelLog:empty{display:none}
+
+/* HISTORY */
+.history{
+    margin-top:12px;
+    background:rgba(255,255,255,.04);
+    border-radius:14px;
+    padding:10px;
+    max-height:140px;
+    overflow:auto;
+    font-size:14px
+}
+.history-title{text-align:center;font-weight:600;margin-bottom:4px}
+.history ul{list-style:none;padding:0;margin:0;text-align:left}
+.history li{margin-bottom:4px}
+
+/* ссылки в истории — как в "Выпало" */
+.history a{
+    color:#7cc7ff;
+    text-decoration:none;
+}
+.history a:hover{
+    text-decoration:underline;
+}
+
+/* ВЫПАЛО */
+#lastResult{
+    text-align:left;
+    font-weight:600;
+    color:#fff;
+    padding-bottom:6px;
+    margin-bottom:8px;
+    border-bottom:1px solid rgba(255,255,255,.15);
+}
+#lastResult span{color:#ffd66b}
+#lastResult a{
+    color:#7cc7ff;
+    text-decoration:none;
+}
+#lastResult a:hover{
+    text-decoration:underline;
+}
+
+/* скрывать пока нет результата */
+#lastResult:has(span:empty){
+    display:none;
+}
 
 /* INPUT */
 input{
@@ -138,19 +177,7 @@ input{
     color:#fff;
 }
 
-/* LINKS */
-.history a,
-.log a{
-    color:#7cc7ff;
-    text-decoration:none;
-}
-.history a:hover,
-.log a:hover{
-    text-decoration:underline;
-}
-
 /* WHEEL */
-canvas{display:block;margin:10px auto}
 .arrow{
     margin:-6px auto 0;
     width:0;height:0;
@@ -158,24 +185,35 @@ canvas{display:block;margin:10px auto}
     border-right:10px solid transparent;
     border-top:18px solid #ffd66b
 }
-.btn-row{display:flex;gap:8px;margin-top:8px}
-.btn-row button{margin-top:0}
 
-/* HISTORY */
-.history{
-    margin-top:12px;
-    background:rgba(255,255,255,.04);
-    border-radius:14px;
-    padding:10px;
-    max-height:120px;
-    overflow:auto;
-    font-size:14px
+.wheel-wrap{
+    position:relative;
+    width:260px;
+    height:260px;
+    margin:10px auto;
 }
-.history-title{text-align:center;font-weight:600;margin-bottom:6px}
-.history ul{text-align:left;list-style:none;padding:0;margin:0}
-.history li{margin-bottom:4px}
 
-@media(max-width:420px){.grid{grid-template-columns:1fr}}
+canvas{
+    display:block;
+    filter:drop-shadow(0 6px 10px rgba(0,0,0,.45));
+}
+
+.wheel-sound{
+    position:absolute;
+    left:50%;
+    top:50%;
+    transform:translate(-50%,-50%);
+    font-size:22px;
+    cursor:pointer;
+    opacity:.55;
+    z-index:5;
+}
+.wheel-sound:hover{
+    opacity:1;
+    transform:translate(-50%,-50%) scale(1.15);
+}
+
+.btn-row{display:flex;gap:8px;margin-top:8px}
 </style>
 </head>
 
@@ -210,13 +248,17 @@ canvas{display:block;margin:10px auto}
 <!-- WHEEL -->
 <div class="card full">
 <div class="arrow"></div>
-<canvas id="wheel" width="260" height="260"></canvas>
 
-<input id="sectorInput" placeholder="Текст сектора или URL">
+<div class="wheel-wrap">
+<canvas id="wheel" width="260" height="260"></canvas>
+<div class="wheel-sound" id="soundToggle" onclick="toggleSound()">🔊</div>
+</div>
+
+<input id="sectorInput" placeholder="Текст сектора">
 
 <div class="btn-row">
-<button onclick="addSector()">➕ Добавить</button>
-<button onclick="resetWheel()">🔄 Сброс</button>
+<button onclick="addSector()">ДОБАВИТЬ</button>
+<button onclick="resetWheel()">СБРОС</button>
 </div>
 
 <button onclick="spinWheel()">КРУТИТЬ</button>
@@ -224,11 +266,12 @@ canvas{display:block;margin:10px auto}
 <div class="log" id="wheelLog"></div>
 
 <div class="history">
-<div class="history-title">📜 История выпадений</div>
+<div class="history-title">📜 История</div>
+<div id="lastResult">Выпало: <span></span></div>
 <ul id="wheelHistory"></ul>
 </div>
-</div>
 
+</div>
 </div>
 </div>
 
@@ -241,29 +284,35 @@ function showLog(id,html){
     const el=document.getElementById(id);
     el.classList.remove('show');
     el.innerHTML=html;
-    requestAnimationFrame(()=>el.classList.add('show'));
+    void el.offsetWidth;
+    el.classList.add('show');
 }
-function clearLog(id){document.getElementById(id).innerHTML=''}
-
-function isURL(t){return /^(https?:\/\/)/i.test(t)}
-function formatLink(t){
-    const s=t.replace(/"/g,'&quot;');
-    return `<a href="${s}" target="_blank" rel="noopener noreferrer">${s}</a>`;
+function isURL(text){
+    return /^(https?:\/\/)/i.test(text);
+}
+function formatLink(text){
+    const safe=text.replace(/"/g,'&quot;');
+    return `<a href="${safe}" target="_blank" rel="noopener noreferrer">${safe}</a>`;
 }
 
-/* AUDIO */
+/* SOUND */
 const audio=new(window.AudioContext||window.webkitAudioContext)();
+let soundEnabled=true;
+function toggleSound(){
+    soundEnabled=!soundEnabled;
+    soundToggle.textContent=soundEnabled?'🔊':'🔇';
+}
 function clickSound(f=900){
+    if(!soundEnabled)return;
     const o=audio.createOscillator(),g=audio.createGain();
-    o.type="square";o.frequency.value=f;
-    g.gain.value=.07;
+    o.frequency.value=f;g.gain.value=.05;
     o.connect(g).connect(audio.destination);
     o.start();o.stop(audio.currentTime+.03);
 }
 function bell(){
+    if(!soundEnabled)return;
     const o=audio.createOscillator(),g=audio.createGain();
-    o.type="sine";o.frequency.value=1200;
-    g.gain.setValueAtTime(.2,audio.currentTime);
+    o.frequency.value=1200;
     g.gain.exponentialRampToValueAtTime(.001,audio.currentTime+.6);
     o.connect(g).connect(audio.destination);
     o.start();o.stop(audio.currentTime+.7);
@@ -271,7 +320,7 @@ function bell(){
 
 /* COIN */
 function coinFlip(){
-    clearLog('coinLog');
+    coinLog.innerHTML='';
     coin.classList.remove('toss');void coin.offsetWidth;coin.classList.add('toss');
     clickSound(2000);
     setTimeout(()=>{
@@ -281,70 +330,80 @@ function coinFlip(){
             ?`Орёл → <span class="movie">${eagleText.value}</span>`
             :`Решка → <span class="movie">${tailsText.value}</span>`
         );
-    },1000);
+    },1100);
 }
 
 /* DICE */
 function rollDice(){
-    clearLog('diceLog');
+    diceLog.innerHTML='';
     dice.classList.remove('roll');void dice.offsetWidth;dice.classList.add('roll');
     clickSound(600);
     const min=+diceMin.value,max=+diceMax.value;
     const n=Math.floor(Math.random()*(max-min+1))+min;
-    setTimeout(()=>showLog('diceLog',`Выпало: <span class="movie">${n}</span>`),950);
+    setTimeout(()=>{
+        showLog('diceLog',`Выпало: <span class="movie">${n}</span>`);
+    },1100);
 }
 
 /* WHEEL */
 const ctx=wheel.getContext('2d');
-let sectors=[],angle=0,spinning=false,history=[];
+let sectors=[],angle=0,spinning=false,blinking=false,history=[];
+let highlightIndex=null,blinkPhase=0;
 
 function draw(){
     ctx.clearRect(0,0,260,260);
     const cx=130,cy=130,r=130;
 
+    ctx.beginPath();
+    ctx.arc(cx,cy,r,0,Math.PI*2);
+    ctx.fillStyle='#252833';
+    ctx.fill();
+
     if(sectors.length){
         const step=2*Math.PI/sectors.length;
-        sectors.forEach((text,i)=>{
+        sectors.forEach((t,i)=>{
             const start=i*step+angle;
-            ctx.save();
             ctx.beginPath();
             ctx.moveTo(cx,cy);
             ctx.arc(cx,cy,r,start,start+step);
             ctx.closePath();
             ctx.fillStyle=`hsl(${i*360/sectors.length},70%,45%)`;
             ctx.fill();
-            ctx.clip();
+
+            ctx.save();
             ctx.translate(cx,cy);
             ctx.rotate(start+step/2);
-            ctx.fillStyle="#fff";
-            ctx.font="14px system-ui";
             ctx.textAlign="right";
             ctx.textBaseline="middle";
-            let label=text;
-            while(ctx.measureText(label+'…').width>90&&label.length){
+            ctx.fillStyle="#fff";
+            ctx.font="14px system-ui";
+
+            let label=t;
+            while(ctx.measureText(label+"…").width>90 && label.length){
                 label=label.slice(0,-1);
             }
-            if(label!==text)label+='…';
+            if(label!==t)label+="…";
+
             ctx.fillText(label,r-16,0);
             ctx.restore();
         });
     }
 
     ctx.save();
-    ctx.globalCompositeOperation="destination-out";
+    ctx.globalCompositeOperation='destination-out';
     ctx.beginPath();
-    ctx.arc(cx,cy,10,0,Math.PI*2);
+    ctx.arc(cx,cy,14,0,Math.PI*2);
     ctx.fill();
     ctx.restore();
 
     ctx.beginPath();
-    ctx.arc(cx,cy,r-1,0,Math.PI*2);
+    ctx.arc(cx,cy,14,0,Math.PI*2);
     ctx.strokeStyle="#ffd66b";
     ctx.lineWidth=2;
     ctx.stroke();
 
     ctx.beginPath();
-    ctx.arc(cx,cy,10,0,Math.PI*2);
+    ctx.arc(cx,cy,r-1,0,Math.PI*2);
     ctx.strokeStyle="#ffd66b";
     ctx.lineWidth=2;
     ctx.stroke();
@@ -355,13 +414,14 @@ function updateHistory(){
     wheelHistory.innerHTML='';
     history.forEach((h,i)=>{
         const li=document.createElement('li');
-        li.innerHTML=isURL(h)?`${i+1}. ${formatLink(h)}`:`${i+1}. ${h}`;
+        li.innerHTML=`${i+1}. `+(isURL(h)?formatLink(h):h);
         wheelHistory.appendChild(li);
     });
 }
 
 function spinWheel(){
-    if(sectors.length<2||spinning)return;
+    if(sectors.length<2||spinning||blinking)return;
+
     spinning=true;
     let speed=Math.random()*.4+.3,last=null;
 
@@ -371,38 +431,37 @@ function spinWheel(){
         draw();
 
         const step=2*Math.PI/sectors.length;
-        const offset=Math.PI/2;
-        const norm=(2*Math.PI-((angle+offset)%(2*Math.PI)))%(2*Math.PI);
-        const idx=Math.floor(norm/step);
-
+        const idx=Math.floor(((2*Math.PI-((angle+Math.PI/2)%(2*Math.PI)))%(2*Math.PI))/step);
         if(idx!==last){clickSound();last=idx}
 
         if(speed<.005){
             clearInterval(spin);
             spinning=false;
-            const res=sectors.splice(idx,1)[0];
-            history.push(res);
+
+            const result=sectors[idx];
+            lastResult.innerHTML=`Выпало: <span>${isURL(result)?formatLink(result):result}</span>`;
+
+            history.push(result);
             updateHistory();
+
+            sectors.splice(idx,1);
             draw();
             bell();
-            showLog(
-                'wheelLog',
-                `Выпало: ${isURL(res)?formatLink(res):res}`
-            );
         }
     },20);
 }
 
 function addSector(){
-    if(!sectorInput.value.trim())return;
+    if(!sectorInput.value.trim()||spinning||blinking)return;
     sectors.push(sectorInput.value.trim());
     sectorInput.value='';
     draw();
 }
 function resetWheel(){
+    if(spinning||blinking)return;
     sectors=[];history=[];
+    lastResult.innerHTML='Выпало: <span></span>';
     updateHistory();
-    showLog('wheelLog','');
     draw();
 }
 </script>
