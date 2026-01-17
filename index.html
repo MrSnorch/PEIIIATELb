@@ -99,11 +99,11 @@ button:active{transform:translateY(1px)}
     40%{transform:translateY(-28px) rotateX(720deg)}
     100%{transform:translateY(0) rotateX(1080deg)}
 }
-.dice.roll{animation:diceToss .95s ease-in-out}
+.dice.roll{animation:diceToss 1s ease-in-out}
 @keyframes diceToss{
     0%{transform:translateY(0) rotate(0deg)}
-    40%{transform:translateY(-28px) rotate(720deg)}
-    100%{transform:translateY(0) rotate(1080deg)}
+    40%{transform:translateY(-28px) rotate(1080deg)}
+    100%{transform:translateY(0) rotate(1440deg)}
 }
 
 /* LOGS */
@@ -115,10 +115,12 @@ button:active{transform:translateY(1px)}
     transform:translateY(10px);
     transition:.3s;
 }
+#wheelLog:empty{
+    margin-top:0;
+    min-height:0;
+}
 .log.show{opacity:1;transform:translateY(0)}
 .movie{color:#ffd66b;font-weight:600}
-
-#wheelLog:empty{display:none}
 
 /* HISTORY */
 .history{
@@ -134,7 +136,7 @@ button:active{transform:translateY(1px)}
 .history ul{list-style:none;padding:0;margin:0;text-align:left}
 .history li{margin-bottom:4px}
 
-/* ссылки одинаковые */
+/* LINKS */
 .history a,
 #lastResult a{
     color:#7cc7ff;
@@ -145,7 +147,7 @@ button:active{transform:translateY(1px)}
     text-decoration:underline;
 }
 
-/* ВЫПАЛО */
+/* RESULT */
 #lastResult{
     text-align:left;
     font-weight:600;
@@ -155,11 +157,7 @@ button:active{transform:translateY(1px)}
     border-bottom:1px solid rgba(255,255,255,.15);
 }
 #lastResult span{color:#ffd66b}
-
-/* скрывать пока пусто */
-#lastResult:has(span:empty){
-    display:none;
-}
+#lastResult:has(span:empty){display:none}
 
 /* INPUT */
 input{
@@ -191,24 +189,284 @@ input{
 canvas{
     display:block;
     filter:drop-shadow(0 6px 10px rgba(0,0,0,.45));
+    cursor:grab;
 }
 
+/* FIX: кнопки Добавить / Сброс в одну строку */
+.btn-row{
+    display:flex;
+    gap:8px;
+    margin-top:8px;
+}
+
+.btn-row button{
+    flex:1;
+}
+/* 🔊 Переключатель звука — левый верх колеса */
 .wheel-sound{
     position:absolute;
-    left:50%;
-    top:50%;
-    transform:translate(-50%,-50%);
-    font-size:22px;
+    top:12px;
+    left:12px;
+    font-size:20px;
     cursor:pointer;
-    opacity:.55;
-    z-index:5;
-}
-.wheel-sound:hover{
-    opacity:1;
-    transform:translate(-50%,-50%) scale(1.15);
+    opacity:.6;
+    z-index:10;
+    user-select:none;
 }
 
-.btn-row{display:flex;gap:8px;margin-top:8px}
+.wheel-sound:hover{
+    opacity:1;
+    transform:scale(1.1);
+}
+
+/* ⚙️ Настройки колеса — правый верх */
+.wheel-settings-btn{
+    position:absolute;
+    top:12px;
+    right:12px;
+    width:auto!important;
+    padding:4px 6px;
+    font-size:13px;
+    border-radius:8px;
+    background:rgba(255,255,255,.12);
+    color:#fff;
+    cursor:pointer;
+    z-index:10;
+}
+
+/* ⚙️ Настройки монетки и кубика */
+.coin-settings-btn, .dice-settings-btn{
+    position:absolute;
+    top:8px;
+    right:8px;
+    width:auto!important;
+    padding:4px 6px;
+    font-size:13px;
+    border-radius:8px;
+    background:rgba(255,255,255,.12);
+    color:#fff;
+    cursor:pointer;
+    z-index:10;
+}
+
+.coin-settings, .dice-settings{
+    display:none;
+    position:absolute;
+    top:44px;
+    right:8px;
+    left:8px;
+    background:rgba(0,0,0,.85);
+    backdrop-filter:blur(10px);
+    border-radius:12px;
+    padding:12px;
+    z-index:20;
+    box-shadow:0 6px 16px rgba(0,0,0,.45);
+}
+
+.settings-header{
+    margin:0 0 8px 0;
+    font-size:14px;
+    color:#ffd66b;
+    text-align:center;
+}
+
+.settings-form{
+    display:flex;
+    flex-direction:column;
+    gap:8px;
+}
+
+.settings-input{
+    width:100%;
+    padding:8px 10px;
+    border-radius:8px;
+    border:none;
+    background:rgba(255,255,255,.08);
+    color:#fff;
+    font-size:13px;
+}
+
+.settings-input:focus{
+    outline:none;
+    background:rgba(255,255,255,.12);
+}
+
+.settings-label{
+    font-size:12px;
+    color:#aaa;
+    margin-bottom:4px;
+    display:block;
+}
+
+.wheel-settings{
+    display:none;
+    position:absolute;
+    top:48px;
+    right:12px;
+    left:12px;
+    background:rgba(0,0,0,.85);
+    backdrop-filter:blur(10px);
+    border-radius:12px;
+    padding:16px;
+    z-index:20;
+    box-shadow:0 6px 16px rgba(0,0,0,.45);
+}
+
+.wheel-settings h3{
+    margin:0 0 10px 0;
+    font-size:14px;
+    color:#ffd66b;
+    text-align:center;
+}
+
+.sector-list{
+    max-height:200px;
+    overflow-y:auto;
+    margin-bottom:10px;
+    background:rgba(255,255,255,.04);
+    border-radius:8px;
+    padding:4px;
+}
+
+
+
+.sector-item{
+    display:flex;
+    justify-content:flex-start;
+    align-items:center;
+    padding:6px 8px 6px 12px;
+    margin-bottom:3px;
+    background:rgba(255,255,255,.08);
+    font-size:12px;
+    transition:.2s;
+    min-height:32px;
+    position:relative;
+    border-left:none;
+    overflow: hidden;
+}
+
+.sector-item > * {
+    align-self: center;
+}
+
+.sector-text{
+    color:#fff;
+    font-size:12px;
+    white-space:nowrap;
+    overflow:hidden;
+    text-overflow:ellipsis;
+    flex: 0 1 auto;
+    margin-left: 6px;
+    margin-right: 20px;
+}
+
+.sector-text a{
+    color:#7cc7ff;
+    text-decoration:none;
+}
+
+.sector-text a:hover{
+    text-decoration:underline;
+}
+
+
+
+.sector-color-strip{
+    position: absolute;
+    left: 0;
+    top: 0;
+    height: 100%;
+    width: 12px;
+    border-radius: 0 4px 4px 0;
+    z-index: 10;
+    box-shadow: 0 0 0 1px rgba(255,255,255,0.2);
+}
+
+.delete-sector{
+    background:#ff4757;
+    color:white;
+    border:none;
+    border-radius:4px;
+    padding:0;
+    font-size:16px;
+    line-height:1;
+    cursor:pointer;
+    transition:.2s;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    width:24px;
+    height:24px;
+    flex-shrink:0;
+    margin-left:auto;
+    align-self:center;
+    transform: translateY(-1px);
+}
+
+.delete-sector:hover{
+    background:#ff2e42;
+    transform:scale(1.05);
+}
+
+.delete-sector:active{
+    transform:scale(0.95);
+}
+
+.sector-item.deleting{
+    background:rgba(255,71,87,.3) !important;
+    border-left:3px solid #ff4757 !important;
+    animation:pulse 0.3s ease-in-out;
+}
+
+@keyframes pulse{
+    0% { transform: scale(1); }
+    50% { transform: scale(1.02); }
+    100% { transform: scale(1); }
+}
+
+.confirm-delete{
+    display:flex;
+    gap:4px;
+}
+
+.confirm-btn{
+    background:#ff4757;
+    color:white;
+    border:none;
+    border-radius:3px;
+    padding:2px 6px;
+    font-size:14px;
+    line-height:1;
+    cursor:pointer;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    width:22px;
+    height:22px;
+}
+
+.cancel-btn{
+    background:#6c757d;
+    color:white;
+    border:none;
+    border-radius:3px;
+    padding:2px 6px;
+    font-size:14px;
+    line-height:1;
+    cursor:pointer;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    width:22px;
+    height:22px;
+}
+
+.empty-message{
+    text-align:center;
+    color:#aaa;
+    font-size:13px;
+    padding:10px;
+}
 </style>
 </head>
 
@@ -218,35 +476,64 @@ canvas{
 
 <!-- COIN -->
 <div class="card">
-<button class="settings-btn" onclick="toggle('coinSet')">⚙️</button>
+<button class="coin-settings-btn" onclick="toggle('coinSettings')">⚙️</button>
 <div class="visual coin" id="coin">🪙</div>
-<div class="settings" id="coinSet">
-<label>Орёл<input id="eagleText" value="🎬 КИНО"></label>
-<label>Решка<input id="tailsText" value="📺 YouTube"></label>
+<div class="coin-settings" id="coinSettings">
+    <div class="settings-header">🪙 Настройки монетки</div>
+    <div class="settings-form">
+        <div>
+            <label class="settings-label">Орёл</label>
+            <input class="settings-input" id="eagleText" value="🎬 КИНО">
+        </div>
+        <div>
+            <label class="settings-label">Решка</label>
+            <input class="settings-input" id="tailsText" value="📺 YouTube">
+        </div>
+    </div>
 </div>
-<button onclick="coinFlip()">ПОДБРОСИТЬ</button>
 <div class="log" id="coinLog"></div>
+<button onclick="coinFlip()">ПОДБРОСИТЬ</button>
 </div>
 
 <!-- DICE -->
 <div class="card">
-<button class="settings-btn" onclick="toggle('diceSet')">⚙️</button>
+<button class="dice-settings-btn" onclick="toggle('diceSettings')">⚙️</button>
 <div class="visual dice" id="dice">🎲</div>
-<div class="settings" id="diceSet">
-<label>Минимум<input id="diceMin" type="number" value="1"></label>
-<label>Максимум<input id="diceMax" type="number" value="3"></label>
+<div class="dice-settings" id="diceSettings">
+    <div class="settings-header">🎲 Настройки кубика</div>
+    <div class="settings-form">
+        <div>
+            <label class="settings-label">Минимум</label>
+            <input class="settings-input" id="diceMin" type="number" value="1">
+        </div>
+        <div>
+            <label class="settings-label">Максимум</label>
+            <input class="settings-input" id="diceMax" type="number" value="3">
+        </div>
+    </div>
 </div>
-<button onclick="rollDice()">ПОДБРОСИТЬ</button>
 <div class="log" id="diceLog"></div>
+<button onclick="rollDice()">ПОДБРОСИТЬ</button>
 </div>
 
 <!-- WHEEL -->
 <div class="card full">
 <div class="arrow"></div>
 
+<!-- Переключатель звука -->
+<div class="wheel-sound" id="soundToggle" onclick="toggleSound()">🔊</div>
+
+<!-- Настройки колеса -->
+<button class="wheel-settings-btn" onclick="toggle('wheelSettings')">⚙️</button>
+<div class="wheel-settings" id="wheelSettings">
+    <h3>🗑️ Удалить секторы</h3>
+    <div class="sector-list" id="sectorList">
+        <div class="empty-message">Нет секторов для удаления</div>
+    </div>
+</div>
+
 <div class="wheel-wrap">
 <canvas id="wheel" width="260" height="260"></canvas>
-<div class="wheel-sound" id="soundToggle" onclick="toggleSound()">🔊</div>
 </div>
 
 <input id="sectorInput" placeholder="Текст сектора">
@@ -270,6 +557,12 @@ canvas{
 </div>
 </div>
 
+<!-- AUDIO -->
+<audio id="sndCoin"  src="sounds/coin.mp3" preload="auto"></audio>
+<audio id="sndDice"  src="sounds/dice.mp3" preload="auto"></audio>
+<audio id="sndWheel" src="sounds/wheel.mp3" preload="auto"></audio>
+<audio id="sndBell"  src="sounds/bell.mp3" preload="auto"></audio>
+
 <script>
 /* helpers */
 function toggle(id){
@@ -283,42 +576,35 @@ function showLog(id,html){
     void el.offsetWidth;
     el.classList.add('show');
 }
-function isURL(text){
-    return /^(https?:\/\/)/i.test(text);
-}
+function isURL(text){return /^(https?:\/\/)/i.test(text)}
 function formatLink(text){
     const safe=text.replace(/"/g,'&quot;');
     return `<a href="${safe}" target="_blank" rel="noopener noreferrer">${safe}</a>`;
 }
 
 /* SOUND */
-const audio=new(window.AudioContext||window.webkitAudioContext)();
 let soundEnabled=true;
+const sndCoin=document.getElementById('sndCoin');
+const sndDice=document.getElementById('sndDice');
+const sndWheel=document.getElementById('sndWheel');
+const sndBell=document.getElementById('sndBell');
+[sndCoin,sndDice,sndWheel,sndBell].forEach(s=>s.volume=0.6);
+
 function toggleSound(){
     soundEnabled=!soundEnabled;
     soundToggle.textContent=soundEnabled?'🔊':'🔇';
 }
-function clickSound(f=900){
+function play(s){
     if(!soundEnabled)return;
-    const o=audio.createOscillator(),g=audio.createGain();
-    o.frequency.value=f;g.gain.value=.05;
-    o.connect(g).connect(audio.destination);
-    o.start();o.stop(audio.currentTime+.03);
-}
-function bell(){
-    if(!soundEnabled)return;
-    const o=audio.createOscillator(),g=audio.createGain();
-    o.frequency.value=1200;
-    g.gain.exponentialRampToValueAtTime(.001,audio.currentTime+.6);
-    o.connect(g).connect(audio.destination);
-    o.start();o.stop(audio.currentTime+.7);
+    s.currentTime=0;
+    s.play().catch(()=>{});
 }
 
 /* COIN */
 function coinFlip(){
     coinLog.innerHTML='';
     coin.classList.remove('toss');void coin.offsetWidth;coin.classList.add('toss');
-    clickSound(2000);
+    play(sndCoin);
     setTimeout(()=>{
         showLog(
             'coinLog',
@@ -333,7 +619,7 @@ function coinFlip(){
 function rollDice(){
     diceLog.innerHTML='';
     dice.classList.remove('roll');void dice.offsetWidth;dice.classList.add('roll');
-    clickSound(600);
+    play(sndDice);
     const min=+diceMin.value,max=+diceMax.value;
     const n=Math.floor(Math.random()*(max-min+1))+min;
     setTimeout(()=>{
@@ -345,6 +631,17 @@ function rollDice(){
 const ctx=wheel.getContext('2d');
 let sectors=[],angle=0,spinning=false,blinking=false,history=[];
 let highlightIndex=null,blinkPhase=0;
+
+/* MOUSE SPIN */
+let dragging=false,lastMouseAngle=0,lastMouseTime=0,mouseSpeed=0;
+
+function getMouseAngle(e){
+    const r=wheel.getBoundingClientRect();
+    return Math.atan2(
+        e.clientY-(r.top+r.height/2),
+        e.clientX-(r.left+r.width/2)
+    );
+}
 
 function draw(){
     ctx.clearRect(0,0,260,260);
@@ -412,31 +709,25 @@ function draw(){
 }
 draw();
 
-function updateHistory(){
-    wheelHistory.innerHTML='';
-    history.forEach((h,i)=>{
-        const li=document.createElement('li');
-        li.innerHTML=`${i+1}. `+(isURL(h)?formatLink(h):h);
-        wheelHistory.appendChild(li);
-    });
-}
-
-function spinWheel(){
+/* BUTTON / MOUSE SPIN */
+function spinWheel(forcedSpeed){
     if(sectors.length<2||spinning||blinking)return;
 
     spinning=true;
-    let speed=Math.random()*.4+.3,last=null;
+    let speed = forcedSpeed ?? (Math.random()*0.6 + 0.25);
+    let friction = Math.random()*0.008 + 0.982;
+    let last=null;
 
     const spin=setInterval(()=>{
         angle+=speed;
-        speed*=.985;
+        speed*=friction;
         draw();
 
         const step=2*Math.PI/sectors.length;
         const idx=Math.floor(((2*Math.PI-((angle+Math.PI/2)%(2*Math.PI)))%(2*Math.PI))/step);
-        if(idx!==last){clickSound();last=idx}
+        if(idx!==last){ play(sndWheel); last=idx }
 
-        if(speed<.005){
+        if(Math.abs(speed)<.005){
             clearInterval(spin);
             spinning=false;
 
@@ -454,7 +745,7 @@ function spinWheel(){
                 draw();
             },30);
 
-            bell();
+            play(sndBell);
 
             setTimeout(()=>{
                 clearInterval(blink);
@@ -467,6 +758,49 @@ function spinWheel(){
     },20);
 }
 
+/* MOUSE EVENTS */
+wheel.addEventListener('mousedown',e=>{
+    if(spinning||blinking||sectors.length<2)return;
+    dragging=true;
+    lastMouseAngle=getMouseAngle(e);
+    lastMouseTime=performance.now();
+    mouseSpeed=0;
+});
+window.addEventListener('mousemove',e=>{
+    if(!dragging)return;
+
+    const a=getMouseAngle(e);
+    let delta=a-lastMouseAngle;
+    if(delta>Math.PI)delta-=Math.PI*2;
+    if(delta<-Math.PI)delta+=Math.PI*2;
+
+    const now=performance.now();
+    angle+=delta;
+    draw();
+
+    mouseSpeed=(delta/(now-lastMouseTime))*16;
+    lastMouseAngle=a;
+    lastMouseTime=now;
+});
+window.addEventListener('mouseup',()=>{
+    if(!dragging)return;
+    dragging=false;
+    if(Math.abs(mouseSpeed)>0.01){
+        spinWheel(mouseSpeed);
+    }
+});
+
+/* HISTORY */
+function updateHistory(){
+    wheelHistory.innerHTML='';
+    history.forEach((h,i)=>{
+        const li=document.createElement('li');
+        li.innerHTML=`${i+1}. `+(isURL(h)?formatLink(h):h);
+        wheelHistory.appendChild(li);
+    });
+}
+
+/* SECTORS */
 function addSector(){
     if(!sectorInput.value.trim()||spinning||blinking)return;
     sectors.push(sectorInput.value.trim());
@@ -478,8 +812,90 @@ function resetWheel(){
     sectors=[];history=[];
     lastResult.innerHTML='Выпало: <span></span>';
     updateHistory();
+    updateSectorList();
     draw();
 }
+
+/* WHEEL SETTINGS */
+function updateSectorList(){
+    const list = document.getElementById('sectorList');
+    
+    if(sectors.length === 0){
+        list.innerHTML = '<div class="empty-message">Нет секторов для удаления</div>';
+        return;
+    }
+    
+    let html = '';
+    sectors.forEach((sector, index) => {
+        const hue = (index * 360 / sectors.length);
+        const bgColor = `hsl(${hue}, 70%, 45%)`;
+        const displayText = isURL(sector) ? formatLink(sector) : sector;
+        html += `
+            <div class="sector-item">
+                <div class="sector-color-strip" style="background:${bgColor}"></div>
+                <div class="sector-text" title="${sector}">${displayText}</div>
+                <button class="delete-sector" onclick="deleteSector(${index})">✕</button>
+            </div>
+        `;
+    });
+    
+    list.innerHTML = html;
+}
+
+function deleteSector(index){
+    if(spinning || blinking) return;
+    
+    if(index >= 0 && index < sectors.length){
+        // Show confirmation UI
+        const sectorItems = document.querySelectorAll('.sector-item');
+        const targetItem = sectorItems[index];
+        
+        if(targetItem){
+            // Highlight the sector being deleted
+            targetItem.classList.add('deleting');
+            
+            // Get the color strip and text elements to preserve them
+            const colorStrip = targetItem.querySelector('.sector-color-strip');
+            const sectorTextElement = targetItem.querySelector('.sector-text');
+            const bgColor = colorStrip ? colorStrip.style.background : '#6c757d';
+            // Preserve the full HTML content including links
+            const sectorHtml = sectorTextElement ? sectorTextElement.innerHTML : '';
+            
+            // Replace with confirm/cancel buttons (preserving color and formatted text)
+            targetItem.innerHTML = `
+                <div class="sector-color-strip" style="background:${bgColor}"></div>
+                <div class="sector-text">${sectorHtml}</div>
+                <div style="flex:1"></div>
+                <div class="confirm-delete">
+                    <button class="confirm-btn" onclick="confirmDelete(${index})">✓</button>
+                    <button class="cancel-btn" onclick="cancelDelete(${index})">✕</button>
+                </div>
+            `;
+        }
+    }
+}
+
+function confirmDelete(index){
+    if(spinning || blinking) return;
+    
+    if(index >= 0 && index < sectors.length){
+        sectors.splice(index, 1);
+        updateSectorList();
+        draw();
+    }
+}
+
+function cancelDelete(index){
+    // Just refresh the list to restore original state
+    updateSectorList();
+}
+
+// Update sector list when adding sectors
+const originalAddSector = addSector;
+addSector = function(){
+    originalAddSector();
+    updateSectorList();
+};
 </script>
 </body>
 </html>
