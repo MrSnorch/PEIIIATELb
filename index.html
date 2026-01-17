@@ -5,86 +5,53 @@
 <title>РЕШАТЕЛЬ 🎰</title>
 
 <style>
-* { box-sizing: border-box; }
+*{box-sizing:border-box}
 
-body {
-    margin: 0;
-    min-height: 100vh;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    font-family: system-ui, -apple-system, Segoe UI, Arial, sans-serif;
-    background: radial-gradient(circle at top, #1b1f2a, #07080d);
-    color: #fff;
+body{
+    margin:0;
+    min-height:100vh;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    font-family:system-ui,Arial,sans-serif;
+    background:radial-gradient(circle at top,#1b1f2a,#07080d);
+    color:#fff
 }
 
-.box {
-    width: 100%;
-    max-width: 460px;
-    background: rgba(20,24,36,.8);
-    backdrop-filter: blur(14px);
-    border-radius: 26px;
-    padding: 26px;
-    box-shadow: 0 35px 70px rgba(0,0,0,.75);
+.box{
+    width:100%;
+    max-width:460px;
+    background:rgba(20,24,36,.9);
+    backdrop-filter:blur(14px);
+    border-radius:26px;
+    padding:26px;
+    box-shadow:0 35px 70px rgba(0,0,0,.75)
 }
 
-h1 { text-align:center; margin-bottom:18px; }
+h1{text-align:center;margin-bottom:18px}
 
 /* GRID */
-.grid {
+.grid{
     display:grid;
     grid-template-columns:1fr 1fr;
-    gap:14px;
+    gap:14px
 }
 
-.card {
-    background: rgba(255,255,255,.04);
+.card{
+    position:relative;
+    background:rgba(255,255,255,.05);
     border-radius:18px;
     padding:16px;
-    text-align:center;
-    position: relative;
+    text-align:center
 }
 
-.visual {
+.visual{
     font-size:60px;
-    user-select:none;
+    user-select:none
 }
 
-/* SETTINGS */
-.settings-btn{
-    position:absolute;
-    top:8px;
-    right:8px;
-    width:auto !important;
-    margin:0;
-    padding:4px 6px;
-    font-size:13px;
-    line-height:1;
-    border-radius:8px;
-    border:none;
-    background:rgba(255,255,255,.12);
-    color:#fff;
-    cursor:pointer;
-}
-.settings{
-    display:none;
-    margin-top:8px;
-    background:rgba(0,0,0,.35);
-    padding:8px;
-    border-radius:10px;
-    font-size:13px;
-    text-align:left;
-}
-.settings label{display:block;margin-bottom:6px}
-.settings input{
-    width:100%;
-    padding:6px;
-    border-radius:8px;
-    border:none;
-}
-
-/* BUTTON */
-button {
+/* 🔥 GLOBAL BUTTON (NORMAL) */
+button{
     width:100%;
     margin-top:8px;
     padding:12px;
@@ -93,81 +60,137 @@ button {
     cursor:pointer;
     font-weight:600;
     color:#eaf0ff;
-    background: linear-gradient(135deg,#2a3355,#1a2140);
+    background:linear-gradient(135deg,#2a3355,#1a2140)
+}
+
+/* ⚙️ SETTINGS BUTTON — FIXED FOREVER */
+.settings-btn{
+    position:absolute;
+    top:8px;
+    right:8px;
+
+    width:auto !important;
+    min-width:unset;
+    max-width:none;
+
+    margin:0;
+    padding:4px 6px;
+
+    font-size:13px;
+    line-height:1;
+    border-radius:8px;
+    border:none;
+
+    background:rgba(255,255,255,.15);
+    color:#fff;
+    cursor:pointer;
+}
+.settings-btn:hover{
+    background:rgba(255,255,255,.25);
+}
+
+/* SETTINGS PANEL */
+.settings{
+    display:none;
+    margin-top:8px;
+    background:rgba(0,0,0,.35);
+    padding:8px;
+    border-radius:10px;
+    font-size:13px;
+    text-align:left
+}
+.settings label{display:block;margin-bottom:6px}
+.settings input{
+    width:100%;
+    padding:6px;
+    border-radius:8px;
+    border:none
 }
 
 /* ANIMATIONS */
-.coin.flip { animation: flip .9s ease-in-out; }
-@keyframes flip {
-    0% { transform: rotateY(0); }
-    50% { transform: rotateY(540deg) scale(1.1); }
-    100% { transform: rotateY(1080deg); }
+.coin.flip{animation:flip .9s ease}
+@keyframes flip{
+    0%{transform:rotateY(0)}
+    50%{transform:rotateY(540deg) scale(1.1)}
+    100%{transform:rotateY(1080deg)}
 }
 
-.dice.roll { animation: roll .6s ease-out; }
-@keyframes roll {
-    0% { transform: rotate(0); }
-    40% { transform: rotate(180deg) scale(1.2); }
-    100% { transform: rotate(360deg); }
+.dice.roll{animation:roll .6s ease}
+@keyframes roll{
+    0%{transform:rotate(0)}
+    40%{transform:rotate(180deg) scale(1.2)}
+    100%{transform:rotate(360deg)}
 }
 
-/* RESULT */
-.result {
-    margin-top:14px;
-    text-align:center;
-    min-height:34px;
+/* LOGS */
+.log{
+    margin-top:10px;
+    min-height:26px;
+    font-size:14px;
     opacity:0;
-    transform:translateY(14px);
-    transition:.4s;
-    white-space: normal;
-    word-break: break-word;
-    overflow-wrap: anywhere;
+    transform:translateY(10px);
+    transition:.3s;
+    word-break:break-word
 }
-.result.show {
+.log.show{
     opacity:1;
-    transform:translateY(0);
+    transform:translateY(0)
 }
 
-.movie { color:#ffd66b; font-weight:600; }
+.movie{color:#ffd66b;font-weight:600}
+a{color:#7cc7ff;text-decoration:none}
+a:hover{text-decoration:underline}
 
 /* WHEEL */
-.wheel-box { margin-top:20px; text-align:center; }
-canvas { display:block; margin:10px auto; }
-
-.arrow {
+.wheel-box{text-align:center;margin-top:20px}
+canvas{display:block;margin:10px auto}
+.arrow{
     margin:-6px auto 0;
     width:0;height:0;
     border-left:10px solid transparent;
     border-right:10px solid transparent;
-    border-top:18px solid #ffd66b;
+    border-top:18px solid #ffd66b
 }
-
-input {
+input{
     width:100%;
     margin-top:6px;
     padding:10px;
     border-radius:10px;
-    border:none;
+    border:none
 }
-
-.controls {
+.controls{
     display:flex;
     gap:8px;
-    margin-top:8px;
+    margin-top:8px
 }
-.controls button { flex:1; }
+.controls button{flex:1}
 
-.history {
-    margin-top:14px;
-    background: rgba(255,255,255,.04);
+/* HISTORY */
+.history{
+    margin-top:12px;
+    background:rgba(255,255,255,.05);
     border-radius:14px;
     padding:10px;
-    max-height:120px;
+    max-height:140px;
     overflow:auto;
+    font-size:14px
+}
+.history-title{
+    text-align:center;
+    font-weight:600;
+    margin-bottom:6px
+}
+.history ul{
+    list-style:none;
+    padding:0;
+    margin:0
+}
+.history li{
+    margin-bottom:4px
 }
 
 @media(max-width:420px){
-    .grid{grid-template-columns:1fr;}
+    .grid{grid-template-columns:1fr}
 }
 </style>
 </head>
@@ -177,257 +200,214 @@ input {
 <h1>🎰 РЕШАТЕЛЬ</h1>
 
 <div class="grid">
-    <div class="card">
-        <button class="settings-btn" onclick="toggle('coinSettings')">⚙️</button>
-        <div class="visual coin" id="coin">🪙</div>
 
-        <div class="settings" id="coinSettings">
-            <label>Орёл
-                <input id="eagleText" value="🎬 КИНО">
-            </label>
-            <label>Решка
-                <input id="tailsText" value="📺 YouTube">
-            </label>
-        </div>
+<!-- 🪙 MONETKA -->
+<div class="card">
+    <button class="settings-btn" onclick="toggle('coinSet')">⚙️</button>
+    <div class="visual coin" id="coin">🪙</div>
 
-        <button onclick="coinFlip()">Монетка</button>
+    <div class="settings" id="coinSet">
+        <label>Орёл<input id="eagleText" value="🎬 КИНО"></label>
+        <label>Решка<input id="tailsText" value="📺 YouTube"></label>
     </div>
 
-    <div class="card">
-        <button class="settings-btn" onclick="toggle('diceSettings')">⚙️</button>
-        <div class="visual dice" id="dice">🎲</div>
-
-        <div class="settings" id="diceSettings">
-            <label>Минимум
-                <input type="number" id="diceMin" value="1">
-            </label>
-            <label>Максимум
-                <input type="number" id="diceMax" value="3">
-            </label>
-        </div>
-
-        <button onclick="rollDice()">Кубик</button>
-    </div>
+    <button onclick="coinFlip()">Монетка</button>
+    <div class="log" id="coinLog"></div>
 </div>
 
+<!-- 🎲 KUBIK -->
+<div class="card">
+    <button class="settings-btn" onclick="toggle('diceSet')">⚙️</button>
+    <div class="visual dice" id="dice">🎲</div>
+
+    <div class="settings" id="diceSet">
+        <label>Минимум<input type="number" id="diceMin" value="1"></label>
+        <label>Максимум<input type="number" id="diceMax" value="3"></label>
+    </div>
+
+    <button onclick="rollDice()">Кубик</button>
+    <div class="log" id="diceLog"></div>
+</div>
+
+</div>
+
+<!-- 🎡 WHEEL -->
 <div class="wheel-box">
     <h3>🎡 Колесо фортуны</h3>
     <div class="arrow"></div>
     <canvas id="wheel" width="260" height="260"></canvas>
 
-    <input id="sectorInput" placeholder="Текст сектора">
+    <input id="sectorInput" placeholder="Текст сектора или URL">
     <div class="controls">
         <button onclick="addSector()">➕ Добавить</button>
         <button onclick="resetWheel()">🔄 Сброс</button>
     </div>
 
     <button style="margin-top:10px" onclick="spinWheel()">🎰 КРУТИТЬ</button>
+    <div class="log" id="wheelLog"></div>
 
     <div class="history">
-        <ul id="historyList"></ul>
+        <div class="history-title">📜 История выпадений</div>
+        <ul id="wheelHistory"></ul>
     </div>
 </div>
 
-<div class="result" id="result"></div>
 </div>
 
 <script>
-/* UI */
+/* helpers */
 function toggle(id){
-    const el=document.getElementById(id);
-    el.style.display = el.style.display==="block" ? "none" : "block";
+    const e=document.getElementById(id);
+    e.style.display=e.style.display==='block'?'none':'block'
 }
-function show(html){
-    const r=document.getElementById('result');
-    r.classList.remove('show');
-    r.innerHTML=html;
-    requestAnimationFrame(()=>r.classList.add('show'));
+function showLog(id,html){
+    const el=document.getElementById(id);
+    el.classList.remove('show');
+    el.innerHTML=html;
+    requestAnimationFrame(()=>el.classList.add('show'))
+}
+function isURL(t){
+    return /^(https?:\/\/)/i.test(t)
+}
+function formatItem(t){
+    return isURL(t)
+        ? `<a href="${t}" target="_blank" rel="noopener">${t}</a>`
+        : t
 }
 
 /* AUDIO */
-const audio = new (window.AudioContext || window.webkitAudioContext)();
-
-/* COIN SOUND */
-function coinSound(){
-    const o=audio.createOscillator(), g=audio.createGain();
-    o.type="triangle";
-    o.frequency.setValueAtTime(1800,audio.currentTime);
-    o.frequency.exponentialRampToValueAtTime(2600,audio.currentTime+0.08);
-    g.gain.value=0.12;
+const audio=new(window.AudioContext||window.webkitAudioContext)();
+function clickSound(f=900){
+    const o=audio.createOscillator(),g=audio.createGain();
+    o.type="square";o.frequency.value=f;
+    g.gain.value=.07;
     o.connect(g).connect(audio.destination);
-    o.start(); o.stop(audio.currentTime+0.09);
+    o.start();o.stop(audio.currentTime+.03)
+}
+function bell(){
+    const o=audio.createOscillator(),g=audio.createGain();
+    o.type="sine";o.frequency.value=1200;
+    g.gain.setValueAtTime(.2,audio.currentTime);
+    g.gain.exponentialRampToValueAtTime(.001,audio.currentTime+.6);
+    o.connect(g).connect(audio.destination);
+    o.start();o.stop(audio.currentTime+.7)
 }
 
-/* DICE SOUND */
-function diceSound(){
-    for(let i=0;i<3;i++){
-        setTimeout(()=>{
-            const o=audio.createOscillator(), g=audio.createGain();
-            o.type="square";
-            o.frequency.value=400+Math.random()*200;
-            g.gain.value=0.06;
-            o.connect(g).connect(audio.destination);
-            o.start(); o.stop(audio.currentTime+0.05);
-        },i*60);
-    }
-}
-
-/* COIN / DICE */
+/* MONETKA */
 function coinFlip(){
-    const coin=document.getElementById('coin');
-    coin.classList.remove('flip'); void coin.offsetWidth; coin.classList.add('flip');
-    coinSound();
-
-    show(Math.random()<.5
+    coin.classList.remove('flip');void coin.offsetWidth;coin.classList.add('flip');
+    clickSound(2000);
+    showLog(
+        'coinLog',
+        Math.random()<.5
         ? `🪙 Орёл → <span class="movie">${eagleText.value}</span>`
         : `🪙 Решка → <span class="movie">${tailsText.value}</span>`
-    );
+    )
 }
 
+/* KUBIK */
 function rollDice(){
-    const dice=document.getElementById('dice');
-    dice.classList.remove('roll'); void dice.offsetWidth; dice.classList.add('roll');
-    diceSound();
-
-    const min=+diceMin.value, max=+diceMax.value;
-    if(min>max) return show("⚠️ Неверный диапазон");
-
+    dice.classList.remove('roll');void dice.offsetWidth;dice.classList.add('roll');
+    clickSound(600);
+    const min=+diceMin.value,max=+diceMax.value;
+    if(min>max)return showLog('diceLog','⚠️ Неверный диапазон');
     const n=Math.floor(Math.random()*(max-min+1))+min;
-    show(`🎲 Кости брошены… выпало <span class="movie">${n}</span>`);
+    showLog('diceLog',`🎲 Выпало: <span class="movie">${n}</span>`)
 }
 
 /* WHEEL */
-const canvas=document.getElementById('wheel');
-const c=canvas.getContext('2d');
-
-let sectors=[];
-let history=[];
-let angle=0,spinning=false,lastIndex=null;
-
-function sectorClick(){
-    const o=audio.createOscillator(), g=audio.createGain();
-    o.type="square";
-    o.frequency.value=900;
-    g.gain.value=0.08;
-    o.connect(g).connect(audio.destination);
-    o.start(); o.stop(audio.currentTime+0.03);
-}
-
-function finalStop(){
-    const now = audio.currentTime;
-    const o1 = audio.createOscillator(), g1 = audio.createGain();
-    const o2 = audio.createOscillator(), g2 = audio.createGain();
-    o1.frequency.setValueAtTime(1200, now);
-    o2.frequency.setValueAtTime(1800, now);
-    g1.gain.setValueAtTime(0.18, now);
-    g2.gain.setValueAtTime(0.1, now);
-    g1.gain.exponentialRampToValueAtTime(0.001, now + 0.6);
-    g2.gain.exponentialRampToValueAtTime(0.001, now + 0.5);
-    o1.connect(g1).connect(audio.destination);
-    o2.connect(g2).connect(audio.destination);
-    o1.start(now); o2.start(now);
-    o1.stop(now + 0.7); o2.stop(now + 0.6);
-}
+const ctx=wheel.getContext('2d');
+let sectors=[],angle=0,spinning=false,history=[];
 
 function draw(){
-    c.clearRect(0,0,260,260);
-
+    ctx.clearRect(0,0,260,260);
     const cx=130,cy=130,r=130;
 
     if(sectors.length){
         const step=2*Math.PI/sectors.length;
-        sectors.forEach((text,i)=>{
-            c.beginPath();
-            c.moveTo(cx,cy);
-            c.fillStyle=`hsl(${i*360/sectors.length},70%,45%)`;
-            c.arc(cx,cy,r,i*step+angle,(i+1)*step+angle);
-            c.fill();
+        sectors.forEach((t,i)=>{
+            ctx.beginPath();
+            ctx.moveTo(cx,cy);
+            ctx.fillStyle=`hsl(${i*360/sectors.length},70%,45%)`;
+            ctx.arc(cx,cy,r,i*step+angle,(i+1)*step+angle);
+            ctx.fill();
 
-            c.save();
-            c.translate(cx,cy);
-            c.rotate(i*step+step/2+angle);
-            c.fillStyle="#fff";
-            c.font="14px sans-serif";
-            c.textAlign="right";
+            ctx.save();
+            ctx.translate(cx,cy);
+            ctx.rotate(i*step+step/2+angle);
+            ctx.fillStyle="#fff";
+            ctx.font="14px system-ui,Arial";
+            ctx.textAlign="right";
+            ctx.textBaseline="middle";
 
-            let label=text;
-            while(c.measureText(label+'…').width>95 && label.length){
-                label=label.slice(0,-1);
+            let label=t;
+            while(ctx.measureText(label+'…').width>95&&label.length){
+                label=label.slice(0,-1)
             }
-            if(label!==text) label+='…';
-
-            c.fillText(label,r-15,5);
-            c.restore();
-        });
+            if(label!==t)label+='…';
+            ctx.fillText(label,r-14,0);
+            ctx.restore();
+        })
     }
 
-    /* ОБВОДКА — ВСЕГДА */
-    c.beginPath();
-    c.arc(cx, cy, r-1, 0, Math.PI*2);
-    c.strokeStyle = "#ffd66b";
-    c.lineWidth = 2;
-    c.shadowColor = "rgba(255,214,107,.5)";
-    c.shadowBlur = 4;
-    c.stroke();
-    c.shadowBlur = 0;
+    ctx.beginPath();
+    ctx.arc(cx,cy,r-1,0,Math.PI*2);
+    ctx.strokeStyle="#ffd66b";
+    ctx.lineWidth=2;
+    ctx.stroke()
 }
 draw();
 
-function spinWheel(){
-    if(sectors.length<2||spinning) return;
-    spinning=true; lastIndex=null;
+function updateHistory(){
+    wheelHistory.innerHTML='';
+    history.forEach((h,i)=>{
+        const li=document.createElement('li');
+        li.innerHTML=`${i+1}. ${formatItem(h)}`;
+        wheelHistory.appendChild(li)
+    })
+}
 
-    let speed=Math.random()*0.4+0.3;
-    const dec=0.985;
+function spinWheel(){
+    if(sectors.length<2||spinning)return;
+    spinning=true;
+
+    let speed=Math.random()*.4+.3;
+    let last=null;
 
     const spin=setInterval(()=>{
         angle+=speed;
-        speed*=dec;
+        speed*=.985;
         draw();
 
         const step=2*Math.PI/sectors.length;
-        const norm=(2*Math.PI-(angle%(2*Math.PI)))%(2*Math.PI);
-        const idx=Math.floor(norm/step);
+        const idx=Math.floor(((2*Math.PI-angle%(2*Math.PI))%(2*Math.PI))/step);
 
-        if(idx!==lastIndex){
-            sectorClick();
-            lastIndex=idx;
-        }
+        if(idx!==last){clickSound();last=idx}
 
-        if(speed<0.005){
+        if(speed<.005){
             clearInterval(spin);
             spinning=false;
-
-            const result=sectors.splice(idx,1)[0];
-            history.push(result);
+            const res=sectors.splice(idx,1)[0];
+            history.push(res);
             updateHistory();
             draw();
-            finalStop();
-            show(`🎡 Выпало: <span class="movie">${result}</span>`);
+            bell();
+            showLog('wheelLog',`🎡 Выпало: ${formatItem(res)}`)
         }
-    },20);
+    },20)
 }
 
 function addSector(){
-    const v=sectorInput.value.trim();
-    if(!v) return;
-    sectors.push(v);
+    if(!sectorInput.value.trim())return;
+    sectors.push(sectorInput.value.trim());
     sectorInput.value='';
-    draw();
+    draw()
 }
-
 function resetWheel(){
-    sectors=[]; history=[];
-    updateHistory(); draw();
-}
-
-function updateHistory(){
-    historyList.innerHTML='';
-    history.forEach((h,i)=>{
-        const li=document.createElement('li');
-        li.textContent=`${i+1}. ${h}`;
-        historyList.appendChild(li);
-    });
+    sectors=[];history=[];
+    updateHistory();
+    showLog('wheelLog','');
+    draw()
 }
 </script>
 </body>
