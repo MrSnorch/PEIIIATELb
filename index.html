@@ -2,7 +2,7 @@
 <html lang="ru">
 <head>
 <meta charset="UTF-8">
-<title>РЕШАТЕЛЬ 🎰</title>
+<title>Решатель</title>
 
 <style>
 *{box-sizing:border-box}
@@ -27,8 +27,6 @@ body{
     padding:26px;
     box-shadow:0 35px 70px rgba(0,0,0,.75)
 }
-
-h1{text-align:center;margin-bottom:18px}
 
 /* GRID */
 .grid{
@@ -121,9 +119,13 @@ button:active{transform:translateY(1px)}
     transition:.3s;
     white-space:normal;
     overflow-wrap:anywhere;
+    text-align:center;
 }
 .log.show{opacity:1;transform:translateY(0)}
 .movie{color:#ffd66b;font-weight:600}
+
+/* wheel log left aligned */
+#wheelLog{ text-align:left; }
 
 /* INPUT */
 input{
@@ -171,11 +173,7 @@ canvas{display:block;margin:10px auto}
 }
 .history-title{text-align:center;font-weight:600;margin-bottom:6px}
 .history ul{text-align:left;list-style:none;padding:0;margin:0}
-.history li{
-    margin-bottom:4px;
-    white-space:normal;
-    overflow-wrap:anywhere;
-}
+.history li{margin-bottom:4px}
 
 @media(max-width:420px){.grid{grid-template-columns:1fr}}
 </style>
@@ -183,7 +181,6 @@ canvas{display:block;margin:10px auto}
 
 <body>
 <div class="box">
-
 <div class="grid">
 
 <!-- COIN -->
@@ -236,7 +233,6 @@ canvas{display:block;margin:10px auto}
 </div>
 
 <script>
-/* helpers */
 function toggle(id){
     const e=document.getElementById(id);
     e.style.display=e.style.display==='block'?'none':'block';
@@ -250,9 +246,9 @@ function showLog(id,html){
 function clearLog(id){document.getElementById(id).innerHTML=''}
 
 function isURL(t){return /^(https?:\/\/)/i.test(t)}
-function formatLink(text){
-    const safe=text.replace(/"/g,'&quot;');
-    return `<a href="${safe}" target="_blank" rel="noopener noreferrer">${safe}</a>`;
+function formatLink(t){
+    const s=t.replace(/"/g,'&quot;');
+    return `<a href="${s}" target="_blank" rel="noopener noreferrer">${s}</a>`;
 }
 
 /* AUDIO */
@@ -306,7 +302,6 @@ function draw(){
     ctx.clearRect(0,0,260,260);
     const cx=130,cy=130,r=130;
 
-    /* SECTORS */
     if(sectors.length){
         const step=2*Math.PI/sectors.length;
         sectors.forEach((text,i)=>{
@@ -326,33 +321,30 @@ function draw(){
             ctx.textAlign="right";
             ctx.textBaseline="middle";
             let label=text;
-            while(ctx.measureText(label+'…').width>90 && label.length){
+            while(ctx.measureText(label+'…').width>90&&label.length){
                 label=label.slice(0,-1);
             }
-            if(label!==text) label+='…';
+            if(label!==text)label+='…';
             ctx.fillText(label,r-16,0);
             ctx.restore();
         });
     }
 
-    /* CUT CENTER HOLE */
     ctx.save();
-    ctx.globalCompositeOperation = "destination-out";
+    ctx.globalCompositeOperation="destination-out";
     ctx.beginPath();
-    ctx.arc(cx, cy, 10, 0, Math.PI * 2);
+    ctx.arc(cx,cy,10,0,Math.PI*2);
     ctx.fill();
     ctx.restore();
 
-    /* OUTER RING */
     ctx.beginPath();
     ctx.arc(cx,cy,r-1,0,Math.PI*2);
     ctx.strokeStyle="#ffd66b";
     ctx.lineWidth=2;
     ctx.stroke();
 
-    /* CENTER RING (same thickness) */
     ctx.beginPath();
-    ctx.arc(cx, cy, 10, 0, Math.PI * 2);
+    ctx.arc(cx,cy,10,0,Math.PI*2);
     ctx.strokeStyle="#ffd66b";
     ctx.lineWidth=2;
     ctx.stroke();
@@ -363,9 +355,7 @@ function updateHistory(){
     wheelHistory.innerHTML='';
     history.forEach((h,i)=>{
         const li=document.createElement('li');
-        li.innerHTML = isURL(h)
-            ? `${i+1}. ${formatLink(h)}`
-            : `${i+1}. ${h}`;
+        li.innerHTML=isURL(h)?`${i+1}. ${formatLink(h)}`:`${i+1}. ${h}`;
         wheelHistory.appendChild(li);
     });
 }
@@ -397,7 +387,7 @@ function spinWheel(){
             bell();
             showLog(
                 'wheelLog',
-                `Выпало: ${isURL(res) ? formatLink(res) : res}`
+                `Выпало: ${isURL(res)?formatLink(res):res}`
             );
         }
     },20);
@@ -418,4 +408,3 @@ function resetWheel(){
 </script>
 </body>
 </html>
-
