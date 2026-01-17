@@ -21,7 +21,7 @@ body{
 .box{
     width:100%;
     max-width:460px;
-    background:rgba(20,24,36,.9);
+    background:rgba(20,24,36,.85);
     backdrop-filter:blur(14px);
     border-radius:26px;
     padding:26px;
@@ -37,20 +37,26 @@ h1{text-align:center;margin-bottom:18px}
     gap:14px
 }
 
+/* CARD */
 .card{
     position:relative;
-    background:rgba(255,255,255,.05);
+    background:rgba(255,255,255,.04);
     border-radius:18px;
     padding:16px;
     text-align:center
 }
+.card.full{grid-column:1 / -1}
 
+/* VISUAL */
 .visual{
     font-size:60px;
-    user-select:none
+    user-select:none;
+    display:inline-block;
+    transform-style:preserve-3d;
+    perspective:800px;
 }
 
-/* 🔥 GLOBAL BUTTON (NORMAL) */
+/* BUTTONS */
 button{
     width:100%;
     margin-top:8px;
@@ -60,36 +66,25 @@ button{
     cursor:pointer;
     font-weight:600;
     color:#eaf0ff;
-    background:linear-gradient(135deg,#2a3355,#1a2140)
+    background:linear-gradient(135deg,#2a3355,#1a2140);
+    box-shadow:0 6px 16px rgba(0,0,0,.45);
+    transition:.15s;
 }
+button:hover{transform:translateY(-1px)}
+button:active{transform:translateY(1px)}
 
-/* ⚙️ SETTINGS BUTTON — FIXED FOREVER */
+/* SETTINGS */
 .settings-btn{
     position:absolute;
     top:8px;
     right:8px;
-
-    width:auto !important;
-    min-width:unset;
-    max-width:none;
-
-    margin:0;
+    width:auto!important;
     padding:4px 6px;
-
     font-size:13px;
-    line-height:1;
     border-radius:8px;
-    border:none;
-
-    background:rgba(255,255,255,.15);
+    background:rgba(255,255,255,.12);
     color:#fff;
-    cursor:pointer;
 }
-.settings-btn:hover{
-    background:rgba(255,255,255,.25);
-}
-
-/* SETTINGS PANEL */
 .settings{
     display:none;
     margin-top:8px;
@@ -100,26 +95,20 @@ button{
     text-align:left
 }
 .settings label{display:block;margin-bottom:6px}
-.settings input{
-    width:100%;
-    padding:6px;
-    border-radius:8px;
-    border:none
-}
+.settings input{width:100%;padding:6px;border-radius:8px;border:none}
 
 /* ANIMATIONS */
-.coin.flip{animation:flip .9s ease}
-@keyframes flip{
-    0%{transform:rotateY(0)}
-    50%{transform:rotateY(540deg) scale(1.1)}
-    100%{transform:rotateY(1080deg)}
+.coin.toss{animation:coinToss 1s ease-in-out}
+@keyframes coinToss{
+    0%{transform:translateY(0) rotateX(0deg)}
+    40%{transform:translateY(-28px) rotateX(720deg)}
+    100%{transform:translateY(0) rotateX(1080deg)}
 }
-
-.dice.roll{animation:roll .6s ease}
-@keyframes roll{
-    0%{transform:rotate(0)}
-    40%{transform:rotate(180deg) scale(1.2)}
-    100%{transform:rotate(360deg)}
+.dice.roll{animation:diceToss .95s ease-in-out}
+@keyframes diceToss{
+    0%{transform:translateY(0) rotate(0deg)}
+    40%{transform:translateY(-28px) rotate(720deg)}
+    100%{transform:translateY(0) rotate(1080deg)}
 }
 
 /* LOGS */
@@ -130,19 +119,35 @@ button{
     opacity:0;
     transform:translateY(10px);
     transition:.3s;
-    word-break:break-word
+    white-space:normal;
+    overflow-wrap:anywhere;
 }
-.log.show{
-    opacity:1;
-    transform:translateY(0)
+.log.show{opacity:1;transform:translateY(0)}
+.movie{color:#ffd66b;font-weight:600}
+
+/* INPUT */
+input{
+    width:100%;
+    margin-top:6px;
+    padding:10px 12px;
+    border-radius:12px;
+    border:none;
+    background:rgba(255,255,255,.08);
+    color:#fff;
 }
 
-.movie{color:#ffd66b;font-weight:600}
-a{color:#7cc7ff;text-decoration:none}
-a:hover{text-decoration:underline}
+/* LINKS */
+.history a,
+.log a{
+    color:#7cc7ff;
+    text-decoration:none;
+}
+.history a:hover,
+.log a:hover{
+    text-decoration:underline;
+}
 
 /* WHEEL */
-.wheel-box{text-align:center;margin-top:20px}
 canvas{display:block;margin:10px auto}
 .arrow{
     margin:-6px auto 0;
@@ -151,128 +156,103 @@ canvas{display:block;margin:10px auto}
     border-right:10px solid transparent;
     border-top:18px solid #ffd66b
 }
-input{
-    width:100%;
-    margin-top:6px;
-    padding:10px;
-    border-radius:10px;
-    border:none
-}
-.controls{
-    display:flex;
-    gap:8px;
-    margin-top:8px
-}
-.controls button{flex:1}
+.btn-row{display:flex;gap:8px;margin-top:8px}
+.btn-row button{margin-top:0}
 
 /* HISTORY */
 .history{
     margin-top:12px;
-    background:rgba(255,255,255,.05);
+    background:rgba(255,255,255,.04);
     border-radius:14px;
     padding:10px;
-    max-height:140px;
+    max-height:120px;
     overflow:auto;
     font-size:14px
 }
-.history-title{
-    text-align:center;
-    font-weight:600;
-    margin-bottom:6px
-}
-.history ul{
-    list-style:none;
-    padding:0;
-    margin:0
-}
+.history-title{text-align:center;font-weight:600;margin-bottom:6px}
+.history ul{text-align:left;list-style:none;padding:0;margin:0}
 .history li{
-    margin-bottom:4px
+    margin-bottom:4px;
+    white-space:normal;
+    overflow-wrap:anywhere;
 }
 
-@media(max-width:420px){
-    .grid{grid-template-columns:1fr}
-}
+@media(max-width:420px){.grid{grid-template-columns:1fr}}
 </style>
 </head>
 
 <body>
 <div class="box">
-<h1>🎰 РЕШАТЕЛЬ</h1>
 
 <div class="grid">
 
-<!-- 🪙 MONETKA -->
+<!-- COIN -->
 <div class="card">
-    <button class="settings-btn" onclick="toggle('coinSet')">⚙️</button>
-    <div class="visual coin" id="coin">🪙</div>
-
-    <div class="settings" id="coinSet">
-        <label>Орёл<input id="eagleText" value="🎬 КИНО"></label>
-        <label>Решка<input id="tailsText" value="📺 YouTube"></label>
-    </div>
-
-    <button onclick="coinFlip()">Монетка</button>
-    <div class="log" id="coinLog"></div>
+<button class="settings-btn" onclick="toggle('coinSet')">⚙️</button>
+<div class="visual coin" id="coin">🪙</div>
+<div class="settings" id="coinSet">
+<label>Орёл<input id="eagleText" value="🎬 КИНО"></label>
+<label>Решка<input id="tailsText" value="📺 YouTube"></label>
+</div>
+<button onclick="coinFlip()">ПОДБРОСИТЬ</button>
+<div class="log" id="coinLog"></div>
 </div>
 
-<!-- 🎲 KUBIK -->
+<!-- DICE -->
 <div class="card">
-    <button class="settings-btn" onclick="toggle('diceSet')">⚙️</button>
-    <div class="visual dice" id="dice">🎲</div>
+<button class="settings-btn" onclick="toggle('diceSet')">⚙️</button>
+<div class="visual dice" id="dice">🎲</div>
+<div class="settings" id="diceSet">
+<label>Минимум<input id="diceMin" type="number" value="1"></label>
+<label>Максимум<input id="diceMax" type="number" value="3"></label>
+</div>
+<button onclick="rollDice()">ПОДБРОСИТЬ</button>
+<div class="log" id="diceLog"></div>
+</div>
 
-    <div class="settings" id="diceSet">
-        <label>Минимум<input type="number" id="diceMin" value="1"></label>
-        <label>Максимум<input type="number" id="diceMax" value="3"></label>
-    </div>
+<!-- WHEEL -->
+<div class="card full">
+<div class="arrow"></div>
+<canvas id="wheel" width="260" height="260"></canvas>
 
-    <button onclick="rollDice()">Кубик</button>
-    <div class="log" id="diceLog"></div>
+<input id="sectorInput" placeholder="Текст сектора или URL">
+
+<div class="btn-row">
+<button onclick="addSector()">➕ Добавить</button>
+<button onclick="resetWheel()">🔄 Сброс</button>
+</div>
+
+<button onclick="spinWheel()">КРУТИТЬ</button>
+
+<div class="log" id="wheelLog"></div>
+
+<div class="history">
+<div class="history-title">📜 История выпадений</div>
+<ul id="wheelHistory"></ul>
+</div>
 </div>
 
 </div>
-
-<!-- 🎡 WHEEL -->
-<div class="wheel-box">
-    <h3>🎡 Колесо фортуны</h3>
-    <div class="arrow"></div>
-    <canvas id="wheel" width="260" height="260"></canvas>
-
-    <input id="sectorInput" placeholder="Текст сектора или URL">
-    <div class="controls">
-        <button onclick="addSector()">➕ Добавить</button>
-        <button onclick="resetWheel()">🔄 Сброс</button>
-    </div>
-
-    <button style="margin-top:10px" onclick="spinWheel()">🎰 КРУТИТЬ</button>
-    <div class="log" id="wheelLog"></div>
-
-    <div class="history">
-        <div class="history-title">📜 История выпадений</div>
-        <ul id="wheelHistory"></ul>
-    </div>
-</div>
-
 </div>
 
 <script>
 /* helpers */
 function toggle(id){
     const e=document.getElementById(id);
-    e.style.display=e.style.display==='block'?'none':'block'
+    e.style.display=e.style.display==='block'?'none':'block';
 }
 function showLog(id,html){
     const el=document.getElementById(id);
     el.classList.remove('show');
     el.innerHTML=html;
-    requestAnimationFrame(()=>el.classList.add('show'))
+    requestAnimationFrame(()=>el.classList.add('show'));
 }
-function isURL(t){
-    return /^(https?:\/\/)/i.test(t)
-}
-function formatItem(t){
-    return isURL(t)
-        ? `<a href="${t}" target="_blank" rel="noopener">${t}</a>`
-        : t
+function clearLog(id){document.getElementById(id).innerHTML=''}
+
+function isURL(t){return /^(https?:\/\/)/i.test(t)}
+function formatLink(text){
+    const safe=text.replace(/"/g,'&quot;');
+    return `<a href="${safe}" target="_blank" rel="noopener noreferrer">${safe}</a>`;
 }
 
 /* AUDIO */
@@ -282,7 +262,7 @@ function clickSound(f=900){
     o.type="square";o.frequency.value=f;
     g.gain.value=.07;
     o.connect(g).connect(audio.destination);
-    o.start();o.stop(audio.currentTime+.03)
+    o.start();o.stop(audio.currentTime+.03);
 }
 function bell(){
     const o=audio.createOscillator(),g=audio.createGain();
@@ -290,29 +270,32 @@ function bell(){
     g.gain.setValueAtTime(.2,audio.currentTime);
     g.gain.exponentialRampToValueAtTime(.001,audio.currentTime+.6);
     o.connect(g).connect(audio.destination);
-    o.start();o.stop(audio.currentTime+.7)
+    o.start();o.stop(audio.currentTime+.7);
 }
 
-/* MONETKA */
+/* COIN */
 function coinFlip(){
-    coin.classList.remove('flip');void coin.offsetWidth;coin.classList.add('flip');
+    clearLog('coinLog');
+    coin.classList.remove('toss');void coin.offsetWidth;coin.classList.add('toss');
     clickSound(2000);
-    showLog(
-        'coinLog',
-        Math.random()<.5
-        ? `🪙 Орёл → <span class="movie">${eagleText.value}</span>`
-        : `🪙 Решка → <span class="movie">${tailsText.value}</span>`
-    )
+    setTimeout(()=>{
+        showLog(
+            'coinLog',
+            Math.random()<.5
+            ?`Орёл → <span class="movie">${eagleText.value}</span>`
+            :`Решка → <span class="movie">${tailsText.value}</span>`
+        );
+    },1000);
 }
 
-/* KUBIK */
+/* DICE */
 function rollDice(){
+    clearLog('diceLog');
     dice.classList.remove('roll');void dice.offsetWidth;dice.classList.add('roll');
     clickSound(600);
     const min=+diceMin.value,max=+diceMax.value;
-    if(min>max)return showLog('diceLog','⚠️ Неверный диапазон');
     const n=Math.floor(Math.random()*(max-min+1))+min;
-    showLog('diceLog',`🎲 Выпало: <span class="movie">${n}</span>`)
+    setTimeout(()=>showLog('diceLog',`Выпало: <span class="movie">${n}</span>`),950);
 }
 
 /* WHEEL */
@@ -323,38 +306,56 @@ function draw(){
     ctx.clearRect(0,0,260,260);
     const cx=130,cy=130,r=130;
 
+    /* SECTORS */
     if(sectors.length){
         const step=2*Math.PI/sectors.length;
-        sectors.forEach((t,i)=>{
+        sectors.forEach((text,i)=>{
+            const start=i*step+angle;
+            ctx.save();
             ctx.beginPath();
             ctx.moveTo(cx,cy);
+            ctx.arc(cx,cy,r,start,start+step);
+            ctx.closePath();
             ctx.fillStyle=`hsl(${i*360/sectors.length},70%,45%)`;
-            ctx.arc(cx,cy,r,i*step+angle,(i+1)*step+angle);
             ctx.fill();
-
-            ctx.save();
+            ctx.clip();
             ctx.translate(cx,cy);
-            ctx.rotate(i*step+step/2+angle);
+            ctx.rotate(start+step/2);
             ctx.fillStyle="#fff";
-            ctx.font="14px system-ui,Arial";
+            ctx.font="14px system-ui";
             ctx.textAlign="right";
             ctx.textBaseline="middle";
-
-            let label=t;
-            while(ctx.measureText(label+'…').width>95&&label.length){
-                label=label.slice(0,-1)
+            let label=text;
+            while(ctx.measureText(label+'…').width>90 && label.length){
+                label=label.slice(0,-1);
             }
-            if(label!==t)label+='…';
-            ctx.fillText(label,r-14,0);
+            if(label!==text) label+='…';
+            ctx.fillText(label,r-16,0);
             ctx.restore();
-        })
+        });
     }
 
+    /* CUT CENTER HOLE */
+    ctx.save();
+    ctx.globalCompositeOperation = "destination-out";
+    ctx.beginPath();
+    ctx.arc(cx, cy, 10, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
+
+    /* OUTER RING */
     ctx.beginPath();
     ctx.arc(cx,cy,r-1,0,Math.PI*2);
     ctx.strokeStyle="#ffd66b";
     ctx.lineWidth=2;
-    ctx.stroke()
+    ctx.stroke();
+
+    /* CENTER RING (same thickness) */
+    ctx.beginPath();
+    ctx.arc(cx, cy, 10, 0, Math.PI * 2);
+    ctx.strokeStyle="#ffd66b";
+    ctx.lineWidth=2;
+    ctx.stroke();
 }
 draw();
 
@@ -362,17 +363,17 @@ function updateHistory(){
     wheelHistory.innerHTML='';
     history.forEach((h,i)=>{
         const li=document.createElement('li');
-        li.innerHTML=`${i+1}. ${formatItem(h)}`;
-        wheelHistory.appendChild(li)
-    })
+        li.innerHTML = isURL(h)
+            ? `${i+1}. ${formatLink(h)}`
+            : `${i+1}. ${h}`;
+        wheelHistory.appendChild(li);
+    });
 }
 
 function spinWheel(){
     if(sectors.length<2||spinning)return;
     spinning=true;
-
-    let speed=Math.random()*.4+.3;
-    let last=null;
+    let speed=Math.random()*.4+.3,last=null;
 
     const spin=setInterval(()=>{
         angle+=speed;
@@ -380,7 +381,9 @@ function spinWheel(){
         draw();
 
         const step=2*Math.PI/sectors.length;
-        const idx=Math.floor(((2*Math.PI-angle%(2*Math.PI))%(2*Math.PI))/step);
+        const offset=Math.PI/2;
+        const norm=(2*Math.PI-((angle+offset)%(2*Math.PI)))%(2*Math.PI);
+        const idx=Math.floor(norm/step);
 
         if(idx!==last){clickSound();last=idx}
 
@@ -392,22 +395,25 @@ function spinWheel(){
             updateHistory();
             draw();
             bell();
-            showLog('wheelLog',`🎡 Выпало: ${formatItem(res)}`)
+            showLog(
+                'wheelLog',
+                `🎡 Выпало: ${isURL(res) ? formatLink(res) : res}`
+            );
         }
-    },20)
+    },20);
 }
 
 function addSector(){
     if(!sectorInput.value.trim())return;
     sectors.push(sectorInput.value.trim());
     sectorInput.value='';
-    draw()
+    draw();
 }
 function resetWheel(){
     sectors=[];history=[];
     updateHistory();
     showLog('wheelLog','');
-    draw()
+    draw();
 }
 </script>
 </body>
