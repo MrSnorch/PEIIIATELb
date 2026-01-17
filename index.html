@@ -2,6 +2,7 @@
 <html lang="ru">
 <head>
 <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>Решатель</title>
 
 <style>
@@ -25,7 +26,24 @@ body{
     backdrop-filter:blur(14px);
     border-radius:26px;
     padding:26px;
-    box-shadow:0 35px 70px rgba(0,0,0,.75)
+    box-shadow:0 35px 70px rgba(0,0,0,.75);
+    margin:10px;
+}
+
+@media (max-width: 480px) {
+    .box {
+        padding: 20px;
+        border-radius: 20px;
+        margin: 5px;
+    }
+    
+    .grid {
+        gap: 10px;
+    }
+    
+    .card {
+        padding: 12px;
+    }
 }
 
 .grid{
