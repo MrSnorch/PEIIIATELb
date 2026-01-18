@@ -1,16 +1,16 @@
-const CACHE_NAME = 'reshatel-v2.2';
+const CACHE_NAME = 'reshatel-v2.3';
 const urlsToCache = [
-  '/PEIIIATELb/',
-  '/PEIIIATELb/index.html',
-  '/PEIIIATELb/manifest.json',
-  '/PEIIIATELb/icon.svg',
-  '/PEIIIATELb/icons/icon-192x192.png',
-  '/PEIIIATELb/icons/icon-512x512.png',
-  '/PEIIIATELb/sounds/coin.mp3',
-  '/PEIIIATELb/sounds/dice.mp3',
-  '/PEIIIATELb/sounds/wheel.mp3',
-  '/PEIIIATELb/sounds/bell.mp3',
-  '/PEIIIATELb/sounds/click.mp3'
+  './',
+  './index.html',
+  './manifest.json',
+  './icon.svg',
+  './icons/icon-192x192.png',
+  './icons/icon-512x512.png',
+  './sounds/coin.mp3',
+  './sounds/dice.mp3',
+  './sounds/wheel.mp3',
+  './sounds/bell.mp3',
+  './sounds/click.mp3'
 ];
 
 // Install event - cache essential resources
