@@ -1228,7 +1228,7 @@ function clearSavedSettings() {
         });
         
         console.log('Saved settings cleared');
-        showToast('💾 Сохраненные настройки очищены', 'success');
+        showToast('💾 Сохраненные данные очищены', 'success');
     } catch (e) {
         console.warn('Failed to clear settings:', e);
     }
@@ -2111,15 +2111,15 @@ function testSoundCache(showNotification = false) {
 
 // Initialize on page load
 window.addEventListener('DOMContentLoaded', async () => {
-    // Initialize Telegram Web App and wait for greeting
-    await initTelegramWebApp();
-    
-    // Load saved settings immediately (don't wait)
+    // Load saved settings first
     const hasSavedData = loadSettings();
     
     // Draw wheel with loaded sectors
     draw();
     updateSectorList();
+    
+    // Initialize Telegram Web App and show greeting
+    await initTelegramWebApp();
     
     // Setup auto-save listeners
     setupAutoSave();
@@ -2135,17 +2135,10 @@ window.addEventListener('DOMContentLoaded', async () => {
         }
     }, 1000);
     
-    // Show notification if settings were loaded (after greeting completes)
-    if (hasSavedData && isTelegramUser()) {
-        // For Telegram users: show after greeting finishes
-        setTimeout(() => {
-            showToast('💾 Настройки загружены', 'success');
-        }, 3500); // Wait for greeting (3s) + small buffer
-    } else if (hasSavedData) {
-        // For regular users: show immediately
-        setTimeout(() => {
-            showToast('💾 Настройки загружены', 'success');
-        }, 500);
+    // Show notification if settings were loaded
+    if (hasSavedData) {
+        // Show immediately
+        showToast('💾 Данные загружены', 'success');
     }
 });
 
