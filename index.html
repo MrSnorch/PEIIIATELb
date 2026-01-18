@@ -1025,7 +1025,7 @@ canvas{
 </div>
 
 <div class="sector-actions">
-    <input id="sectorInput" placeholder="Текст сектора">
+    <input id="sectorInput" placeholder="Текст сектора" onkeypress="handleSectorInputKeyPress(event)">
     <button class="sector-add-btn" onclick="playClick(); addSector()">➕</button>
 </div>
 
@@ -1906,6 +1906,13 @@ function updateSectorText(inputElement){
     } else if(!newText){
         // If text is empty, revert to original value
         inputElement.value = sectors[index];
+    }
+}
+
+function handleSectorInputKeyPress(event){
+    if(event.key === 'Enter'){
+        event.preventDefault(); // Prevent form submission
+        addSector();
     }
 }
 
