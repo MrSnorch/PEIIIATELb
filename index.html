@@ -119,6 +119,34 @@ button:active{transform:translateY(1px)}
 }
 .settings label{display:block;margin-bottom:6px}
 
+.cloud-sync-container {
+    margin-bottom: 15px;
+    padding: 10px;
+    background: rgba(255, 214, 107, 0.1);
+    border-radius: 10px;
+    border: 1px solid rgba(255, 214, 107, 0.3);
+}
+
+.cloud-sync-btn {
+    width: 100% !important;
+    padding: 10px !important;
+    background: linear-gradient(135deg, #4a6fa5, #2a3f5f) !important;
+    border: 1px solid #ffd66b !important;
+    color: #ffd66b !important;
+    font-weight: 600;
+}
+
+.cloud-sync-btn:hover {
+    background: linear-gradient(135deg, #5a7fb5, #3a4f6f) !important;
+    transform: translateY(-1px);
+}
+
+.cloud-sync-btn:disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
+    transform: none !important;
+}
+
 /* ANIMATIONS */
 .coin.toss{animation:coinToss 1.2s ease-out}
 @keyframes coinToss{
@@ -961,6 +989,10 @@ canvas{
 <div class="coin-settings" id="coinSettings">
     <div class="settings-header">🪙 Настройки монетки</div>
     <div class="settings-form">
+        <!-- Cloud Sync Button (Telegram only) -->
+        <div class="cloud-sync-container" id="cloudSyncContainer" style="display: none;">
+            <button class="cloud-sync-btn" onclick="manualCloudSync()">☁️ Синхронизировать с облаком</button>
+        </div>
         <div>
             <label class="settings-label">Аверс</label>
             <input class="settings-input" id="eagleText" value="ФИЛЬМ">
@@ -1071,10 +1103,12 @@ const STORAGE_KEY = 'solverApp';
 /* TELEGRAM WEB APP */
 let telegramUser = null;
 let isTelegramMode = false;
+let telegramWebApp = null;
 
 function initTelegramWebApp() {
     if (window.Telegram?.WebApp) {
         const tg = window.Telegram.WebApp;
+        telegramWebApp = tg;
         tg.ready();
         
         // Expand to full screen
@@ -1092,9 +1126,24 @@ function initTelegramWebApp() {
             const userStorageKey = `${STORAGE_KEY}_${telegramUser.id}`;
             window.STORAGE_KEY = userStorageKey;
             
-            // Show welcome message
+            // Show cloud sync button
             setTimeout(() => {
+                const syncContainer = document.getElementById('cloudSyncContainer');
+                if (syncContainer) {
+                    syncContainer.style.display = 'block';
+                }
+            }, 500);
+            
+            // Show welcome message
+            setTimeout(async () => {
                 showToast(`👋 Привет, ${telegramUser.first_name}!`, 'success');
+                
+                // Try to load settings from Telegram Cloud
+                const cloudSettings = await loadSettingsFromCloud();
+                if (cloudSettings) {
+                    applyCloudSettings(cloudSettings);
+                    showToast('☁️ Настройки загружены из облака', 'success');
+                }
             }, 1000);
         }
     }
@@ -1106,6 +1155,154 @@ function getTelegramUserId() {
 
 function isTelegramUser() {
     return isTelegramMode;
+}
+
+// TELEGRAM CLOUD STORAGE FUNCTIONS
+
+// Save settings to Telegram Cloud
+async function saveSettingsToCloud() {
+    if (!isTelegramUser() || !telegramWebApp?.CloudStorage) {
+        console.log('Telegram Cloud Storage not available');
+        return false;
+    }
+    
+    try {
+        const settings = getCurrentSettings();
+        const settingsString = JSON.stringify(settings);
+        
+        await telegramWebApp.CloudStorage.setItem('user_settings', settingsString);
+        console.log('✅ Settings saved to Telegram Cloud');
+        
+        // Also save sync timestamp
+        await telegramWebApp.CloudStorage.setItem('last_sync', Date.now().toString());
+        
+        return true;
+    } catch (error) {
+        console.error('❌ Failed to save to Telegram Cloud:', error);
+        return false;
+    }
+}
+
+// Load settings from Telegram Cloud
+async function loadSettingsFromCloud() {
+    if (!isTelegramUser() || !telegramWebApp?.CloudStorage) {
+        return null;
+    }
+    
+    try {
+        const settingsString = await telegramWebApp.CloudStorage.getItem('user_settings');
+        if (settingsString) {
+            const settings = JSON.parse(settingsString);
+            console.log('📥 Settings loaded from Telegram Cloud');
+            return settings;
+        }
+        return null;
+    } catch (error) {
+        console.error('❌ Failed to load from Telegram Cloud:', error);
+        return null;
+    }
+}
+
+// Apply cloud settings to UI
+function applyCloudSettings(settings) {
+    if (!settings) return;
+    
+    try {
+        // Apply coin settings
+        if (settings.coin) {
+            const eagleEl = document.getElementById('eagleText');
+            const tailsEl = document.getElementById('tailsText');
+            const edgeEl = document.getElementById('edgeText');
+            const edgeChanceEl = document.getElementById('edgeChance');
+            
+            if (eagleEl) eagleEl.value = settings.coin.eagleText || 'ФИЛЬМ';
+            if (tailsEl) tailsEl.value = settings.coin.tailsText || 'СЕРИАЛ';
+            if (edgeEl) edgeEl.value = settings.coin.edgeText || 'АНИМЕ';
+            if (edgeChanceEl) edgeChanceEl.value = settings.coin.edgeChance || '1';
+        }
+        
+        // Apply dice settings
+        if (settings.dice) {
+            const minEl = document.getElementById('diceMin');
+            const maxEl = document.getElementById('diceMax');
+            
+            if (minEl) minEl.value = settings.dice.min || '1';
+            if (maxEl) maxEl.value = settings.dice.max || '3';
+        }
+        
+        // Apply sectors
+        if (Array.isArray(settings.sectors)) {
+            window.sectors = [...settings.sectors];
+            updateSectorList();
+            draw();
+        }
+        
+        // Apply history
+        if (Array.isArray(settings.history)) {
+            window.history = [...settings.history];
+            updateHistory();
+        }
+        
+        // Apply sound setting
+        if (typeof settings.soundEnabled !== 'undefined') {
+            window.soundEnabled = settings.soundEnabled;
+            const soundToggle = document.getElementById('soundToggle');
+            if (soundToggle) {
+                soundToggle.textContent = settings.soundEnabled ? '🔊' : '🔇';
+            }
+        }
+        
+        console.log('🔄 Cloud settings applied successfully');
+    } catch (error) {
+        console.error('❌ Failed to apply cloud settings:', error);
+    }
+}
+
+// Get current settings for saving
+function getCurrentSettings() {
+    return {
+        soundEnabled: window.soundEnabled,
+        sectors: window.sectors || [],
+        history: window.history || [],
+        coin: {
+            eagleText: document.getElementById('eagleText')?.value || 'ФИЛЬМ',
+            tailsText: document.getElementById('tailsText')?.value || 'СЕРИАЛ',
+            edgeText: document.getElementById('edgeText')?.value || 'АНИМЕ',
+            edgeChance: document.getElementById('edgeChance')?.value || '1'
+        },
+        dice: {
+            min: document.getElementById('diceMin')?.value || '1',
+            max: document.getElementById('diceMax')?.value || '3'
+        },
+        telegramUserId: getTelegramUserId(),
+        lastModified: Date.now(),
+        isTelegramMode: isTelegramUser()
+    };
+}
+
+// Manual sync button handler
+async function manualCloudSync() {
+    playClick();
+    
+    const syncBtn = event.target;
+    const originalText = syncBtn.textContent;
+    syncBtn.textContent = '⏳ Синхронизация...';
+    syncBtn.disabled = true;
+    
+    try {
+        const success = await saveSettingsToCloud();
+        if (success) {
+            showToast('✅ Настройки синхронизированы с облаком', 'success');
+        } else {
+            showToast('❌ Ошибка синхронизации', 'error');
+        }
+    } catch (error) {
+        showToast('❌ Ошибка синхронизации', 'error');
+        console.error('Sync error:', error);
+    } finally {
+        syncBtn.textContent = originalText;
+        syncBtn.disabled = false;
+    }
 }
 
 function saveSettings() {
@@ -1136,10 +1333,11 @@ function saveSettings() {
         localStorage.setItem(storageKey, JSON.stringify(settings));
         console.log('Settings saved to localStorage');
         
-        // In Telegram mode, could sync with backend
+        // Auto-sync to Telegram Cloud (non-blocking)
         if (isTelegramUser()) {
-            console.log('💾 Settings saved for Telegram user:', getTelegramUserId());
-            // Future: send to your server
+            saveSettingsToCloud().catch(error => {
+                console.log('Cloud sync failed (continuing with local storage):', error);
+            });
         }
     } catch (e) {
         console.warn('Failed to save settings:', e);
