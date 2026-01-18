@@ -942,6 +942,101 @@ canvas{
 </div>
 
 <script>
+/* STORAGE */
+const STORAGE_KEY = 'solverApp';
+
+function saveSettings() {
+    const settings = {
+        soundEnabled: soundEnabled,
+        sectors: sectors,
+        history: history,
+        coin: {
+            eagleText: document.getElementById('eagleText')?.value || 'ФИЛЬМ',
+            tailsText: document.getElementById('tailsText')?.value || 'СЕРИАЛ',
+            edgeText: document.getElementById('edgeText')?.value || 'АНИМЕ',
+            edgeChance: document.getElementById('edgeChance')?.value || '1'
+        },
+        dice: {
+            min: document.getElementById('diceMin')?.value || '1',
+            max: document.getElementById('diceMax')?.value || '3'
+        }
+    };
+    
+    try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(settings));
+        console.log('Settings saved to localStorage');
+    } catch (e) {
+        console.warn('Failed to save settings:', e);
+    }
+}
+
+function loadSettings() {
+    try {
+        const saved = localStorage.getItem(STORAGE_KEY);
+        if (!saved) return false;
+        
+        const settings = JSON.parse(saved);
+        
+        // Restore sound setting
+        if (typeof settings.soundEnabled !== 'undefined') {
+            soundEnabled = settings.soundEnabled;
+            const soundToggle = document.getElementById('soundToggle');
+            if (soundToggle) {
+                soundToggle.textContent = soundEnabled ? '🔊' : '🔇';
+            }
+        }
+        
+        // Restore sectors
+        if (Array.isArray(settings.sectors)) {
+            sectors = [...settings.sectors];
+        }
+        
+        // Restore history
+        if (Array.isArray(settings.history)) {
+            history = [...settings.history];
+            updateHistory();
+        }
+        
+        // Restore coin settings
+        if (settings.coin) {
+            const eagleEl = document.getElementById('eagleText');
+            const tailsEl = document.getElementById('tailsText');
+            const edgeEl = document.getElementById('edgeText');
+            const edgeChanceEl = document.getElementById('edgeChance');
+            
+            if (eagleEl) eagleEl.value = settings.coin.eagleText || 'ФИЛЬМ';
+            if (tailsEl) tailsEl.value = settings.coin.tailsText || 'СЕРИАЛ';
+            if (edgeEl) edgeEl.value = settings.coin.edgeText || 'АНИМЕ';
+            if (edgeChanceEl) edgeChanceEl.value = settings.coin.edgeChance || '1';
+        }
+        
+        // Restore dice settings
+        if (settings.dice) {
+            const minEl = document.getElementById('diceMin');
+            const maxEl = document.getElementById('diceMax');
+            
+            if (minEl) minEl.value = settings.dice.min || '1';
+            if (maxEl) maxEl.value = settings.dice.max || '3';
+        }
+        
+        console.log('Settings loaded from localStorage');
+        return true;
+    } catch (e) {
+        console.warn('Failed to load settings:', e);
+        return false;
+    }
+}
+
+function clearSavedSettings() {
+    try {
+        localStorage.removeItem(STORAGE_KEY);
+        console.log('Saved settings cleared');
+        showToast('💾 Сохраненные настройки очищены', 'success');
+    } catch (e) {
+        console.warn('Failed to clear settings:', e);
+    }
+}
+
 /* helpers */
 function toggle(id){
     const e=document.getElementById(id);
@@ -1001,6 +1096,9 @@ const sndClick=document.getElementById('sndClick');
 function toggleSound(){
     soundEnabled=!soundEnabled;
     soundToggle.textContent=soundEnabled?'🔊':'🔇';
+    
+    // Save settings
+    saveSettings();
     
     // Show toast notification
     if(soundEnabled){
@@ -1192,6 +1290,9 @@ function spinWheel(){
                 sectors.splice(idx,1);
                 updateSectorList(); // Update settings panel
                 draw();
+                            
+                // Save settings
+                saveSettings();
             },3000);
         }
     },20);
@@ -1227,6 +1328,10 @@ function addSector(){
     sectors.push(sectorText);
     sectorInput.value='';
     draw();
+    updateSectorList();
+    
+    // Save settings
+    saveSettings();
     
     // Show success notification
     showToast('✅ Сектор добавлен', 'success');
@@ -1237,6 +1342,9 @@ function resetWheel(){
     updateHistory();
     updateSectorList();
     draw();
+    
+    // Save settings
+    saveSettings();
 }
 
 function copySectors(){
@@ -1331,6 +1439,9 @@ function confirmClearHistory(){
     showToast('🗑️ История очищена', 'success');
     // Restore the clear button
     restoreClearButton();
+    
+    // Save settings
+    saveSettings();
 }
 
 function cancelClearHistory(){
@@ -1414,6 +1525,9 @@ function confirmDelete(index){
         sectors.splice(index, 1);
         updateSectorList();
         draw();
+        
+        // Save settings
+        saveSettings();
     }
 }
 
@@ -1430,6 +1544,9 @@ function updateSectorText(inputElement){
     if(newText && index >= 0 && index < sectors.length){
         sectors[index] = newText;
         draw(); // Update the wheel visualization
+        
+        // Save settings
+        saveSettings();
     } else if(!newText){
         // If text is empty, revert to original value
         inputElement.value = sectors[index];
@@ -1446,6 +1563,57 @@ function handleSectorKeyPress(event, inputElement){
         inputElement.blur();
     }
 }
+
+// Auto-save when coin settings change
+function setupAutoSave() {
+    // Coin settings
+    ['eagleText', 'tailsText', 'edgeText', 'edgeChance'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) {
+            el.addEventListener('change', saveSettings);
+            el.addEventListener('blur', saveSettings);
+        }
+    });
+    
+    // Dice settings
+    ['diceMin', 'diceMax'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) {
+            el.addEventListener('change', saveSettings);
+            el.addEventListener('blur', saveSettings);
+        }
+    });
+    
+    // Sector input
+    const sectorInput = document.getElementById('sectorInput');
+    if (sectorInput) {
+        sectorInput.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                setTimeout(saveSettings, 100); // Delay to allow addSector to complete
+            }
+        });
+    }
+}
+
+// Initialize on page load
+window.addEventListener('DOMContentLoaded', () => {
+    // Load saved settings
+    const hasSavedData = loadSettings();
+    
+    // Draw wheel with loaded sectors
+    draw();
+    updateSectorList();
+    
+    // Setup auto-save listeners
+    setupAutoSave();
+    
+    // Show notification if settings were loaded
+    if (hasSavedData) {
+        setTimeout(() => {
+            showToast('💾 Настройки загружены', 'success');
+        }, 500);
+    }
+});
 
 // Update sector list when adding sectors
 const originalAddSector = addSector;
