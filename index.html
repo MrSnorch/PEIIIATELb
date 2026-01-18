@@ -4,6 +4,8 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>Решатель</title>
+<!-- Telegram Web App -->
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
 
 <style>
 *{box-sizing:border-box}
@@ -1066,6 +1068,46 @@ canvas{
 /* STORAGE */
 const STORAGE_KEY = 'solverApp';
 
+/* TELEGRAM WEB APP */
+let telegramUser = null;
+let isTelegramMode = false;
+
+function initTelegramWebApp() {
+    if (window.Telegram?.WebApp) {
+        const tg = window.Telegram.WebApp;
+        tg.ready();
+        
+        // Expand to full screen
+        tg.expand();
+        
+        // Get user data
+        telegramUser = tg.initDataUnsafe.user;
+        isTelegramMode = !!telegramUser;
+        
+        if (isTelegramMode) {
+            console.log('📱 Telegram Web App detected');
+            console.log('User:', telegramUser);
+            
+            // Change storage key to include user ID
+            const userStorageKey = `${STORAGE_KEY}_${telegramUser.id}`;
+            window.STORAGE_KEY = userStorageKey;
+            
+            // Show welcome message
+            setTimeout(() => {
+                showToast(`👋 Привет, ${telegramUser.first_name}!`, 'success');
+            }, 1000);
+        }
+    }
+}
+
+function getTelegramUserId() {
+    return telegramUser?.id || null;
+}
+
+function isTelegramUser() {
+    return isTelegramMode;
+}
+
 function saveSettings() {
     const settings = {
         soundEnabled: soundEnabled,
@@ -1080,12 +1122,25 @@ function saveSettings() {
         dice: {
             min: document.getElementById('diceMin')?.value || '1',
             max: document.getElementById('diceMax')?.value || '3'
-        }
+        },
+        // Telegram integration
+        telegramUserId: getTelegramUserId(),
+        lastModified: Date.now(),
+        isTelegramMode: isTelegramUser()
     };
     
+    // Use user-specific storage key in Telegram mode
+    const storageKey = window.STORAGE_KEY || STORAGE_KEY;
+    
     try {
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(settings));
+        localStorage.setItem(storageKey, JSON.stringify(settings));
         console.log('Settings saved to localStorage');
+        
+        // In Telegram mode, could sync with backend
+        if (isTelegramUser()) {
+            console.log('💾 Settings saved for Telegram user:', getTelegramUserId());
+            // Future: send to your server
+        }
     } catch (e) {
         console.warn('Failed to save settings:', e);
     }
@@ -1093,7 +1148,15 @@ function saveSettings() {
 
 function loadSettings() {
     try {
-        const saved = localStorage.getItem(STORAGE_KEY);
+        // Try user-specific key first (Telegram mode), then default
+        const storageKey = window.STORAGE_KEY || STORAGE_KEY;
+        let saved = localStorage.getItem(storageKey);
+        
+        // Fallback to default key if user-specific not found
+        if (!saved && storageKey !== STORAGE_KEY) {
+            saved = localStorage.getItem(STORAGE_KEY);
+        }
+        
         if (!saved) return false;
         
         const settings = JSON.parse(saved);
@@ -1150,7 +1213,16 @@ function loadSettings() {
 
 function clearSavedSettings() {
     try {
-        localStorage.removeItem(STORAGE_KEY);
+        // Clear both user-specific and default keys
+        const storageKeys = [STORAGE_KEY];
+        if (window.STORAGE_KEY && window.STORAGE_KEY !== STORAGE_KEY) {
+            storageKeys.push(window.STORAGE_KEY);
+        }
+        
+        storageKeys.forEach(key => {
+            localStorage.removeItem(key);
+        });
+        
         console.log('Saved settings cleared');
         showToast('💾 Сохраненные настройки очищены', 'success');
     } catch (e) {
@@ -1990,6 +2062,9 @@ function testSoundCache(showNotification = false) {
 
 // Initialize on page load
 window.addEventListener('DOMContentLoaded', () => {
+    // Initialize Telegram Web App
+    initTelegramWebApp();
+    
     // Load saved settings
     const hasSavedData = loadSettings();
     
