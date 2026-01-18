@@ -4,6 +4,8 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>Решатель</title>
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
+<script type="module" src="firebase-user-data.js"></script>
 
 <style>
 *{box-sizing:border-box}
@@ -44,6 +46,24 @@ body{
     .card {
         padding: 12px;
     }
+}
+
+/* Telegram Mini App specific styles */
+.tg-mini-app {
+    background: var(--tg-theme-bg-color, #000);
+    color: var(--tg-theme-text-color, #fff);
+}
+
+.tg-button {
+    background: var(--tg-theme-button-color, #2a3355);
+    color: var(--tg-theme-button-text-color, #fff);
+}
+
+.tg-hint {
+    color: var(--tg-theme-hint-color, #aaa);
+    font-size: 12px;
+    text-align: center;
+    margin-top: 10px;
 }
 
 .grid{
@@ -1990,6 +2010,12 @@ function testSoundCache(showNotification = false) {
 
 // Initialize on page load
 window.addEventListener('DOMContentLoaded', () => {
+    // Initialize Telegram Mini App
+    initTelegramApp();
+    
+    // Initialize achievements
+    initAchievements();
+    
     // Load saved settings
     const hasSavedData = loadSettings();
     
@@ -2018,6 +2044,117 @@ window.addEventListener('DOMContentLoaded', () => {
         }, 500);
     }
 });
+
+// TELEGRAM MINI APP FUNCTIONS
+let tgUser = null;
+let isTelegramApp = false;
+
+function initTelegramApp() {
+    if (window.Telegram && window.Telegram.WebApp) {
+        const tg = window.Telegram.WebApp;
+        
+        // Expand to full screen
+        tg.expand();
+        
+        // Get user data
+        if (tg.initDataUnsafe && tg.initDataUnsafe.user) {
+            tgUser = tg.initDataUnsafe.user;
+            isTelegramApp = true;
+            console.log('Telegram user:', tgUser);
+            
+            // Apply Telegram theme
+            document.body.classList.add('tg-mini-app');
+            
+            // Show welcome message
+            setTimeout(() => {
+                showToast(`👋 Привет, ${tgUser.first_name}!`, 'success');
+            }, 1000);
+        }
+        
+        // Handle back button
+        tg.BackButton.onClick(() => {
+            // Close app or navigate back
+            tg.close();
+        });
+    }
+}
+
+function getTelegramUserId() {
+    return tgUser ? `tg_${tgUser.id}` : null;
+}
+
+function isTelegramEnvironment() {
+    return isTelegramApp;
+}
+
+// ACHIEVEMENTS SYSTEM
+const ACHIEVEMENTS_KEY = 'solverAchievements';
+
+// Achievement definitions
+const ACHIEVEMENTS = {
+    FIRST_COIN: {
+        id: 'first_coin',
+        title: 'Первый бросок',
+        description: 'Подбросьте монетку впервые',
+        icon: '🪙',
+        condition: (stats) => stats.coin.total >= 1,
+        secret: false
+    },
+    COIN_MASTER: {
+        id: 'coin_master',
+        title: 'Мастер монетки',
+        description: 'Подбросьте монетку 100 раз',
+        icon: '👑',
+        condition: (stats) => stats.coin.total >= 100,
+        secret: false
+    },
+    LUCKY_EDGE: {
+        id: 'lucky_edge',
+        title: 'Счастливое ребро',
+        description: 'Поймайте ребро монетки',
+        icon: '🍀',
+        condition: (stats) => stats.coin.edge > 0,
+        secret: false
+    }
+};
+
+// Statistics tracking
+let userStats = {
+    coin: { heads: 0, tails: 0, edge: 0, total: 0 },
+    dice: { total: 0, maxValue: 0, maxHit: 0 },
+    wheel: { total: 0, sectorsCreated: 0 },
+    achievements: [],
+    sessionActions: 0,
+    nightUsage: 0,
+    lastUsed: null
+};
+
+function initAchievements() {
+    loadAchievements();
+    updateSessionStats();
+}
+
+function loadAchievements() {
+    const saved = localStorage.getItem(ACHIEVEMENTS_KEY);
+    if (saved) {
+        userStats = JSON.parse(saved);
+    } else {
+        userStats.achievements = [];
+        userStats.sessionActions = 0;
+        userStats.nightUsage = 0;
+        userStats.lastUsed = Date.now();
+    }
+}
+
+function saveAchievements() {
+    localStorage.setItem(ACHIEVEMENTS_KEY, JSON.stringify(userStats));
+}
+
+function updateSessionStats() {
+    userStats.sessionActions++;
+    userStats.lastUsed = Date.now();
+    saveAchievements();
+}
 
 // Update sector list when adding sectors
 const originalAddSector = addSector;
