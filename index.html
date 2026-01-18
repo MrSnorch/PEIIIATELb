@@ -970,10 +970,15 @@ function saveSettings() {
     }
 }
 
-function loadSettings() {
+function loadSettings(showNotification = false) {
     try {
         const saved = localStorage.getItem(STORAGE_KEY);
-        if (!saved) return false;
+        if (!saved) {
+            if (showNotification) {
+                console.log('ℹ️ Нет сохраненных настроек');
+            }
+            return false;
+        }
         
         const settings = JSON.parse(saved);
         
@@ -1019,10 +1024,20 @@ function loadSettings() {
             if (maxEl) maxEl.value = settings.dice.max || '3';
         }
         
-        console.log('Settings loaded from localStorage');
+        console.log('✅ Settings loaded from localStorage');
+        
+        // Show notification only if requested
+        if (showNotification) {
+            const itemCount = (sectors.length + history.length);
+            showToast(`💾 Загружено: ${itemCount} элементов`, 'success');
+        }
+        
         return true;
     } catch (e) {
-        console.warn('Failed to load settings:', e);
+        console.warn('❌ Failed to load settings:', e);
+        if (showNotification) {
+            showToast('⚠️ Ошибка загрузки настроек', 'error');
+        }
         return false;
     }
 }
@@ -1035,6 +1050,40 @@ function clearSavedSettings() {
     } catch (e) {
         console.warn('Failed to clear settings:', e);
     }
+}
+
+// Manual sound test function (can be called from console)
+function checkSounds() {
+    const result = testSoundCache(true);
+    console.log('Sound test result:', result);
+    return result;
+}
+
+// Preload sounds manually if needed
+function reloadSounds() {
+    console.log('🔄 Reloading sounds...');
+    preloadSounds();
+    setTimeout(() => {
+        checkSounds();
+    }, 500);
+}
+
+// Manual settings check function
+function checkSettings() {
+    const hasSettings = loadSettings(true);
+    console.log('Settings check result:', hasSettings);
+    return hasSettings;
+}
+
+// Clear and reload everything
+function resetAll() {
+    clearSavedSettings();
+    sectors = [];
+    history = [];
+    updateHistory();
+    updateSectorList();
+    draw();
+    console.log('🔄 Everything reset to defaults');
 }
 
 /* helpers */
@@ -1658,22 +1707,39 @@ function setupAutoSave() {
 }
 
 // Test sound cache
-function testSoundCache() {
+function testSoundCache(showNotification = false) {
     console.log('🔍 Testing sound cache:');
+    let loadedCount = 0;
+    let totalCount = Object.keys(audioCache).length;
+    
     Object.keys(audioCache).forEach(key => {
         const sound = audioCache[key];
+        const isLoaded = sound.readyState >= 3 || sound.duration > 0;
+        if (isLoaded) loadedCount++;
+        
         console.log(`${key}:`, {
-            loaded: sound.readyState >= 3,
+            loaded: isLoaded,
             duration: sound.duration || 'unknown',
             volume: sound.volume
         });
     });
+    
+    // Show notification only if requested and there are issues
+    if (showNotification) {
+        if (loadedCount < totalCount) {
+            showToast(`⚠️ Загружено звуков: ${loadedCount}/${totalCount}`, 'error');
+        } else {
+            console.log(`✅ Все звуки загружены: ${loadedCount}/${totalCount}`);
+        }
+    }
+    
+    return { loaded: loadedCount, total: totalCount };
 }
 
 // Initialize on page load
 window.addEventListener('DOMContentLoaded', () => {
-    // Load saved settings
-    const hasSavedData = loadSettings();
+    // Load saved settings silently
+    const hasSavedData = loadSettings(false);
     
     // Draw wheel with loaded sectors
     draw();
@@ -1682,21 +1748,19 @@ window.addEventListener('DOMContentLoaded', () => {
     // Setup auto-save listeners
     setupAutoSave();
     
-    // Test sound cache after a small delay
-    setTimeout(testSoundCache, 1000);
-    
-    // Show notification if settings were loaded
-    if (hasSavedData) {
-        setTimeout(() => {
-            showToast('💾 Настройки загружены', 'success');
-        }, 500);
-    }
-    
-    // Show sound cache status
+    // Test sound cache after a small delay (silent test)
     setTimeout(() => {
-        const cachedCount = Object.keys(audioCache).length;
-        showToast(`🎵 Загружено звуков: ${cachedCount}/5`, 'success');
-    }, 1500);
+        const result = testSoundCache(false);
+        // Only show notification if there are problems
+        if (result.loaded < result.total) {
+            setTimeout(() => {
+                showToast(`⚠️ Проблемы с загрузкой звуков: ${result.loaded}/${result.total}`, 'error');
+            }, 500);
+        }
+    }, 1000);
+    
+    // No automatic notification for settings anymore
+    // Settings loading is now silent by default
 });
 
 // Update sector list when adding sectors
