@@ -118,17 +118,17 @@ button:active{transform:translateY(1px)}
 .settings label{display:block;margin-bottom:6px}
 
 /* ANIMATIONS */
-.coin.toss{animation:coinToss 1s ease-in-out}
+.coin.toss{animation:coinToss 1.4s ease-out}
 @keyframes coinToss{
-    0%{transform:translateY(0) rotateX(0deg)}
-    40%{transform:translateY(-28px) rotateX(720deg)}
-    100%{transform:translateY(0) rotateX(1080deg)}
+    0%{transform:translateY(0) rotateX(0deg) scale(1); filter:brightness(1) drop-shadow(0 0 0 rgba(255,214,107,0))}
+    50%{transform:translateY(-40px) rotateX(720deg) scale(1.15); filter:brightness(1.3) drop-shadow(0 0 20px rgba(255,214,107,0.4))}
+    100%{transform:translateY(0) rotateX(1080deg) scale(1); filter:brightness(1) drop-shadow(0 0 0 rgba(255,214,107,0))}
 }
-.dice.roll{animation:diceToss 1s ease-in-out}
+.dice.roll{animation:diceToss 1.5s ease-out}
 @keyframes diceToss{
-    0%{transform:translateY(0) rotate(0deg)}
-    40%{transform:translateY(-28px) rotate(1080deg)}
-    100%{transform:translateY(0) rotate(1440deg)}
+    0%{transform:translateY(0) rotate(0deg) scale(1); filter:brightness(1) drop-shadow(0 0 0 rgba(255,255,255,0))}
+    50%{transform:translateY(-45px) rotate(1080deg) scale(1.2); filter:brightness(1.3) drop-shadow(0 0 20px rgba(255,255,255,0.4))}
+    100%{transform:translateY(0) rotate(1440deg) scale(1); filter:brightness(1) drop-shadow(0 0 0 rgba(255,255,255,0))}
 }
 
 /* LOGS */
@@ -271,6 +271,11 @@ button:active{transform:translateY(1px)}
     border:none;
     display:block;
     transition:all .2s ease;
+}
+
+.history-clear-btn:hover{
+    background:rgba(255,255,255,.2);
+    transform:scale(1.05);
 }
 
 .history-copy-btn:hover{
@@ -579,6 +584,121 @@ canvas{
     padding:16px;
     z-index:20;
     box-shadow:0 6px 16px rgba(0,0,0,.45);
+}
+
+.clear-all-sectors-btn{
+    width:100%;
+    margin-top:10px;
+    padding:10px;
+    border-radius:10px;
+    border:none;
+    cursor:pointer;
+    font-weight:600;
+    color:#ff6b6b;
+    background:rgba(255,107,107,.15);
+    border:1px solid rgba(255,107,107,.3);
+    transition:.2s;
+}
+
+.clear-all-sectors-btn:hover{
+    background:rgba(255,107,107,.25);
+    border-color:rgba(255,107,107,.5);
+    transform:translateY(-1px);
+}
+
+.clear-all-sectors-btn:active{
+    transform:translateY(1px);
+}
+
+/* Confirmation Modal Styles */
+.confirmation-overlay{
+    position:fixed;
+    top:0;
+    left:0;
+    width:100%;
+    height:100%;
+    background:rgba(0,0,0,.7);
+    backdrop-filter:blur(4px);
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    z-index:10000;
+    animation:fadeIn 0.2s ease-out;
+}
+
+.confirmation-modal{
+    background:rgba(20,24,36,.95);
+    backdrop-filter:blur(14px);
+    border-radius:16px;
+    padding:24px;
+    width:90%;
+    max-width:400px;
+    box-shadow:0 25px 50px rgba(0,0,0,.5);
+    border:1px solid rgba(255,255,255,.1);
+    animation:slideIn 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.confirmation-header{
+    font-size:18px;
+    font-weight:600;
+    color:#ffd66b;
+    text-align:center;
+    margin-bottom:16px;
+}
+
+.confirmation-body{
+    font-size:14px;
+    color:#e0e0e0;
+    text-align:center;
+    line-height:1.5;
+    margin-bottom:24px;
+}
+
+.confirmation-buttons{
+    display:flex;
+    gap:12px;
+}
+
+.confirm-btn-large, .cancel-btn-large{
+    flex:1;
+    padding:12px;
+    border-radius:12px;
+    border:none;
+    font-weight:600;
+    cursor:pointer;
+    transition:.2s;
+    font-size:14px;
+}
+
+.confirm-btn-large{
+    background:linear-gradient(135deg, #ff4757, #ff2e42);
+    color:white;
+}
+
+.confirm-btn-large:hover{
+    transform:translateY(-2px);
+    box-shadow:0 6px 16px rgba(255,71,87,.4);
+}
+
+.cancel-btn-large{
+    background:rgba(255,255,255,.12);
+    color:#fff;
+    border:1px solid rgba(255,255,255,.2);
+}
+
+.cancel-btn-large:hover{
+    background:rgba(255,255,255,.2);
+    transform:translateY(-2px);
+}
+
+@keyframes fadeIn{
+    from{opacity:0;}
+    to{opacity:1;}
+}
+
+@keyframes slideIn{
+    from{transform:translateY(-20px);opacity:0;}
+    to{transform:translateY(0);opacity:1;}
 }
 
 .wheel-settings h3{
@@ -896,6 +1016,7 @@ canvas{
     <div class="sector-list" id="sectorList">
         <div class="empty-message">Нет секторов для удаления</div>
     </div>
+    <button class="clear-all-sectors-btn" onclick="playClick(); clearAllSectors()">🗑️ Очистить всё</button>
 </div>
 
 <div class="wheel-wrap">
@@ -914,7 +1035,7 @@ canvas{
     <div class="log" id="wheelLog"></div>
     <div class="history-container">
 <div class="history-header">
-    <button class="history-clear-btn" onclick="playClick(); clearHistory()">🗑️</button>
+    <button class="history-clear-btn" onclick="playClick(); showClearHistoryConfirmation()">🗑️</button>
     <div class="history-title">📜 История</div>
     <button class="history-copy-btn" onclick="playClick(); copyHistory()">📋</button>
 </div>
@@ -1035,6 +1156,152 @@ function clearSavedSettings() {
     } catch (e) {
         console.warn('Failed to clear settings:', e);
     }
+}
+
+// Clear all sectors function
+function clearAllSectors() {
+    // Check if there are any sectors to clear
+    if (sectors.length === 0) {
+        showToast('❌ Нет секторов для очистки', 'error');
+        return;
+    }
+    
+    // Show custom confirmation modal
+    showClearConfirmation(sectors.length);
+}
+
+// Show custom confirmation modal
+function showClearConfirmation(count) {
+    // Play warning sound
+    playClick();
+    
+    // Create overlay
+    const overlay = document.createElement('div');
+    overlay.className = 'confirmation-overlay';
+    overlay.id = 'clearConfirmation';
+    
+    overlay.innerHTML = `
+        <div class="confirmation-modal">
+            <div class="confirmation-header">⚠️ Подтверждение</div>
+            <div class="confirmation-body">
+                Вы уверены, что хотите очистить всё?
+                <br>Это действие нельзя отменить.
+            </div>
+            <div class="confirmation-buttons">
+                <button class="confirm-btn-large" onclick="playClick(); confirmClearAll()">✓ Подтвердить</button>
+                <button class="cancel-btn-large" onclick="playClick(); cancelClearAll()">✕ Отмена</button>
+            </div>
+        </div>
+    `;
+    
+    document.body.appendChild(overlay);
+    
+    // Add escape key listener
+    const escListener = (e) => {
+        if (e.key === 'Escape') {
+            cancelClearAll();
+            document.removeEventListener('keydown', escListener);
+        }
+    };
+    document.addEventListener('keydown', escListener);
+}
+
+// Confirm clearing all sectors
+function confirmClearAll() {
+    // Remove modal
+    const modal = document.getElementById('clearConfirmation');
+    if (modal) modal.remove();
+    
+    // Clear all sectors
+    const count = sectors.length;
+    sectors = [];
+    updateSectorList();
+    draw();
+    
+    // Save settings
+    saveSettings();
+    
+    // Show success notification
+    showToast(`🗑️ Удалено ${count} секторов`, 'success');
+}
+
+// Cancel clearing
+function cancelClearAll() {
+    // Remove modal
+    const modal = document.getElementById('clearConfirmation');
+    if (modal) modal.remove();
+    
+    // Show cancellation notification
+    showToast('↩️ Очистка отменена', 'error');
+}
+
+// Show clear history confirmation
+function showClearHistoryConfirmation() {
+    // Check if history is empty
+    if (history.length === 0) {
+        showToast('❌ История уже пуста', 'error');
+        return;
+    }
+    
+    // Play warning sound
+    playClick();
+    
+    // Create overlay
+    const overlay = document.createElement('div');
+    overlay.className = 'confirmation-overlay';
+    overlay.id = 'clearHistoryConfirmation';
+    
+    overlay.innerHTML = `
+        <div class="confirmation-modal">
+            <div class="confirmation-header">⚠️ Подтверждение</div>
+            <div class="confirmation-body">
+                Вы уверены, что хотите очистить всю историю?
+                <br>Это действие нельзя отменить.
+            </div>
+            <div class="confirmation-buttons">
+                <button class="confirm-btn-large" onclick="playClick(); confirmClearHistoryModal()">✓ Подтвердить</button>
+                <button class="cancel-btn-large" onclick="playClick(); cancelClearHistoryModal()">✕ Отмена</button>
+            </div>
+        </div>
+    `;
+    
+    document.body.appendChild(overlay);
+    
+    // Add escape key listener
+    const escListener = (e) => {
+        if (e.key === 'Escape') {
+            cancelClearHistoryModal();
+            document.removeEventListener('keydown', escListener);
+        }
+    };
+    document.addEventListener('keydown', escListener);
+}
+
+// Confirm clearing history
+function confirmClearHistoryModal() {
+    // Remove modal
+    const modal = document.getElementById('clearHistoryConfirmation');
+    if (modal) modal.remove();
+    
+    // Clear history
+    history = [];
+    updateHistory();
+    
+    // Save settings
+    saveSettings();
+    
+    // Show success notification
+    showToast('🗑️ История очищена', 'success');
+}
+
+// Cancel clearing history
+function cancelClearHistoryModal() {
+    // Remove modal
+    const modal = document.getElementById('clearHistoryConfirmation');
+    if (modal) modal.remove();
+    
+    // Show cancellation notification
+    showToast('↩️ Очистка отменена', 'error');
 }
 
 // Manual sound test function (can be called from console)
@@ -1492,50 +1759,7 @@ function copyHistory(){
     });
 }
 
-function clearHistory(){
-    if(history.length === 0){
-        showToast('❌ История уже пуста', 'error');
-        return;
-    }
-    
-    // Show confirmation UI
-    const clearBtn = document.querySelector('.history-clear-btn');
-    if(clearBtn){
-        // Replace with confirm/cancel buttons
-        clearBtn.outerHTML = `
-            <div class="confirm-clear-history">
-                <button class="confirm-btn" onclick="playClick(); confirmClearHistory()">✓</button>
-                <button class="cancel-btn" onclick="playClick(); cancelClearHistory()">✕</button>
-            </div>
-        `;
-    }
-}
 
-function confirmClearHistory(){
-    history = [];
-    updateHistory();
-    showToast('🗑️ История очищена', 'success');
-    // Restore the clear button
-    restoreClearButton();
-    
-    // Save settings
-    saveSettings();
-}
-
-function cancelClearHistory(){
-    // Restore the clear button
-    restoreClearButton();
-}
-
-function restoreClearButton(){
-    const header = document.querySelector('.history-header');
-    if(header){
-        const confirmDiv = header.querySelector('.confirm-clear-history');
-        if(confirmDiv){
-            confirmDiv.outerHTML = '<button class="history-clear-btn" onclick="playClick(); clearHistory()">🗑️</button>';
-        }
-    }
-}
 
 /* WHEEL SETTINGS */
 function updateSectorList(){
