@@ -47,12 +47,9 @@ http://localhost:8000
 ### Файловая структура
 ```
 PEIIIATELb/
-├── index.html          # Главная страница
-
-├── icon.svg           # Векторная иконка
-├── icons/             # PNG иконки для установки
-│   ├── icon-192x192.png
-│   └── icon-512x512.png
+├── index.html         # Главная страница
+├── README.md          # Документация
+├── LICENSE            # Лицензия MIT
 └── sounds/            # Звуковые эффекты
     ├── coin.mp3
     ├── dice.mp3
