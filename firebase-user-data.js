@@ -179,7 +179,131 @@ class UserDataManager {
   }
 }
 
-// Export singleton instance
+// Utility function to create test data
+async function createTestData() {
+  try {
+    console.log("🧪 Creating test data...");
+    
+    // Test user data
+    const testUsers = [
+      {
+        id: 123456789,
+        first_name: "Алексей",
+        last_name: "Петров",
+        username: "alex_petrov"
+      },
+      {
+        id: 987654321,
+        first_name: "Мария",
+        last_name: "Сидорова", 
+        username: "maria_sidorova"
+      },
+      {
+        id: 456789123,
+        first_name: "Дмитрий",
+        last_name: "Козлов",
+        username: "dmitry_kozlov"
+      }
+    ];
+    
+    // Create test users with different stats
+    for (let i = 0; i < testUsers.length; i++) {
+      const user = testUsers[i];
+      const userId = `tg_${user.id}`;
+      
+      // Different stats for each user
+      const gameStats = {
+        coin: {          heads: 40 + i * 15,
+          tails: 35 + i * 12,
+          edge: i,
+          total: 75 + i * 27
+        },
+        dice: {
+          total: 80 + i * 40,
+          maxValue: 6,
+          maxHit: 10 + i * 5
+        },
+        wheel: {
+          total: 30 + i * 20,
+          sectorsCreated: 15 + i * 8
+        },
+        achievements: i === 0 ? ["first_coin", "coin_master"] : 
+                      i === 1 ? ["first_coin", "lucky_edge"] : 
+                      ["first_coin"],
+        sessionActions: 150 + i * 75
+      };
+      
+      const userData = {
+        telegramId: user.id,
+        firstName: user.first_name,
+        lastName: user.last_name,
+        username: user.username,
+        createdAt: new Date(Date.now() - (i * 24 * 60 * 60 * 1000)).toISOString(), // Разные даты создания
+        lastActive: new Date().toISOString(),
+        gameStats: gameStats
+      };
+      
+      // Create user document
+      const userRef = doc(db, "users", userId);
+      await setDoc(userRef, userData, { merge: true });
+      
+      console.log(`✅ Created test user: ${user.first_name} (${userId})`);
+    }
+    
+    // Create leaderboard document
+    const leaderboardRef = doc(db, "leaderboard", "global");
+    await setDoc(leaderboardRef, {
+      lastUpdated: new Date().toISOString(),
+      description: "Тестовый лидерборд"
+    }, { merge: true });
+    
+    // Create stats document
+    const statsRef = doc(db, "stats", "app");
+    await setDoc(statsRef, {
+      totalUsers: 3,
+      totalCoinFlips: 321,
+      totalDiceRolls: 290,
+      totalWheelSpins: 130,
+      activeUsersToday: 3,
+      lastReset: new Date(new Date().getFullYear(), 0, 1).toISOString()
+    }, { merge: true });
+    
+    console.log("🎉 All test data created successfully!");
+    console.log("📊 Users created:", testUsers.length);
+    return true;
+  } catch (error) {
+    console.error("❌ Error creating test data:", error);
+    return false;
+  }
+}
+
+// Utility function to clear test data
+async function clearTestData() {
+  try {
+    console.log("🧹 Clearing test data...");
+    
+    const testUserIds = [
+      "tg_123456789",
+      "tg_987654321", 
+      "tg_456789123"
+    ];
+    
+    // Delete test users
+    for (const userId of testUserIds) {
+      const userRef = doc(db, "users", userId);
+      await setDoc(userRef, {}); // This will delete the document
+      console.log(`🗑️ Deleted test user: ${userId}`);
+    }
+    
+    console.log("🧹 Test data cleared!");
+    return true;
+  } catch (error) {
+    console.error("❌ Error clearing test data:", error);
+    return false;
+  }
+}
+
+// Export singleton instance and utility functions
 const userDataManager = new UserDataManager();
 
-export { userDataManager, db };
+export { userDataManager, db, createTestData, clearTestData };
