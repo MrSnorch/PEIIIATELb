@@ -19,15 +19,18 @@ self.addEventListener('install', (event) => {
     caches.open(CACHE_NAME)
       .then((cache) => {
         console.log('📦 Caching app shell');
-        return cache.addAll(urlsToCache);
+        // Добавляем все необходимые ресурсы
+        return cache.addAll(urlsToCache)
+          .catch((error) => {
+            console.warn('⚠️ Some resources failed to cache:', error);
+            // Продолжаем установку даже если часть ресурсов не загрузилась
+            return Promise.resolve();
+          });
       })
       .then(() => {
         console.log('✅ Service Worker installed');
         // Активируем немедленно
         return self.skipWaiting();
-      })
-      .catch((error) => {
-        console.error('❌ Cache installation failed:', error);
       })
   );
 });
@@ -49,10 +52,13 @@ self.addEventListener('activate', (event) => {
       );
     }).then(() => {
       console.log('✅ Service Worker activated');
-      // Получаем контроль над всеми страницами
+      // Получаем контроль над всеми страницами немедленно
       return self.clients.claim();
     })
   );
+  
+  // Убеждаемся, что активация произошла быстро
+  return self.clients.claim();
 });
 
 // Перехват сетевых запросов

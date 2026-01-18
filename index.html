@@ -1,6 +1,15 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
+<!-- Early Service Worker registration -->
+<script>
+// Register service worker as early as possible
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('/sw.js')
+    .catch(error => console.log('Early SW registration failed:', error));
+}
+</script>
+
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <link rel="manifest" href="/manifest.json">
