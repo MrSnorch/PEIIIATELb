@@ -609,7 +609,7 @@ canvas{
 }
 
 .sector-list::-webkit-scrollbar-thumb {
-    background: linear-gradient(180deg, #ffd66b, #e6c150, #ffd66b);
+    background: #393b46;
     border-radius: 0 8px 8px 0;
     border: 2px solid transparent;
     background-clip: padding-box;
@@ -617,20 +617,20 @@ canvas{
 }
 
 .sector-list::-webkit-scrollbar-thumb:hover {
-    background: linear-gradient(180deg, #ffdf85, #ffd66b, #ffdf85);
+    background: #4a4c5a;
     border-radius: 0 8px 8px 0;
     box-shadow: inset 0 0 0 2px rgba(255,255,255,.2);
 }
 
 .sector-list::-webkit-scrollbar-thumb:active {
-    background: linear-gradient(180deg, #e6c150, #d4af37, #e6c150);
+    background: #2a2c35;
     border-radius: 0 8px 8px 0;
 }
 
 /* Firefox scrollbar */
 .sector-list {
     scrollbar-width: thin;
-    scrollbar-color: #ffd66b rgba(255,255,255,.05);
+    scrollbar-color: #393b46 rgba(0,0,0,.2);
 }
 
 
@@ -641,13 +641,17 @@ canvas{
     align-items:center;
     padding:6px 8px 6px 12px;
     margin-bottom:3px;
-    background:rgba(255,255,255,.08);
+    background:rgba(0,0,0,.85);
+    backdrop-filter:blur(10px);
+    border-radius:12px;
+    box-shadow:0 2px 8px rgba(0,0,0,.3);
     font-size:12px;
     transition:.2s;
     min-height:32px;
     position:relative;
     border-left:none;
-    overflow: hidden;
+    overflow: visible;
+    transform: translateY(2px);
 }
 
 .sector-item > * {
@@ -663,6 +667,42 @@ canvas{
     flex: 0 1 auto;
     margin-left: 6px;
     margin-right: 20px;
+}
+
+.sector-edit-input{
+    background: rgba(255,255,255,0.08);
+    border: 1px solid rgba(255,255,255,0.15);
+    color: #fff;
+    font-size: 12px;
+    flex: 1 1 auto;
+    margin: 0 8px 0 6px;
+    outline: none;
+    min-width: 80px;
+    max-width: 284px;
+    padding: 2px 4px;
+    border-radius: 4px;
+    cursor: text;
+}
+
+.sector-edit-input:focus{
+    background: rgba(255,255,255,0.15);
+    border: 1px solid rgba(255,255,255,0.3);
+    box-shadow: 0 0 0 2px rgba(255,255,255,0.2);
+}
+
+.sector-item .sector-edit-input[readonly]{
+    cursor: not-allowed;
+    opacity: 0.8;
+}
+
+.sector-edit-input:hover:not(:focus):not([readonly]){
+    background: rgba(255,255,255,0.12);
+    border: 1px solid rgba(255,255,255,0.2);
+}
+
+.confirm-delete{
+    flex-shrink: 0;
+    margin-left: 8px;
 }
 
 .sector-text a{
@@ -681,10 +721,11 @@ canvas{
     left: 0;
     top: 0;
     height: 100%;
-    width: 12px;
-    border-radius: 0 4px 4px 0;
+    width: 8px;
+    border-radius: 12px 0 0 12px;
     z-index: 10;
-    box-shadow: 0 0 0 1px rgba(255,255,255,0.2);
+    box-shadow: 0 0 0 1px rgba(255,255,255,0.1);
+    opacity: 0.9;
 }
 
 .delete-sector{
@@ -705,33 +746,37 @@ canvas{
     flex-shrink:0;
     margin-left:auto;
     align-self:center;
-    transform: translateY(-1px);
+    position: relative;
+    top: -4px;
 }
 
 .delete-sector:hover{
     background:#ff2e42;
-    transform:scale(1.05);
+    transform: scale(1.05);
 }
 
 .delete-sector:active{
-    transform:scale(0.95);
+    transform: scale(0.95);
 }
 
 .sector-item.deleting{
     background:rgba(255,71,87,.3) !important;
-    border-left:3px solid #ff4757 !important;
+    border-left:0px solid #ff4757 !important;
+    height: 44px;
     animation:pulse 0.3s ease-in-out;
 }
 
 @keyframes pulse{
-    0% { transform: scale(1); }
-    50% { transform: scale(1.02); }
-    100% { transform: scale(1); }
+    0% { transform: translateY(2px) scale(1); }
+    50% { transform: translateY(2px) scale(1.02); }
+    100% { transform: translateY(2px) scale(1); }
 }
 
 .confirm-delete{
     display:flex;
     gap:4px;
+    position: relative;
+    top: -4px;
 }
 
 .confirm-btn{
@@ -845,9 +890,9 @@ canvas{
 <button class="wheel-sound-btn" id="soundToggle" onclick="toggleSound()">🔊</button>
 
 <!-- Настройки колеса -->
-<button class="wheel-settings-btn" onclick="toggle('wheelSettings')">🗑️</button>
+<button class="wheel-settings-btn" onclick="toggle('wheelSettings')">✏️</button>
 <div class="wheel-settings" id="wheelSettings">
-    <h3>🗑️ Удалить секторы</h3>
+    <h3>✏️ Редактор секторов</h3>
     <div class="sector-list" id="sectorList">
         <div class="empty-message">Нет секторов для удаления</div>
     </div>
@@ -954,6 +999,13 @@ const sndBell=document.getElementById('sndBell');
 function toggleSound(){
     soundEnabled=!soundEnabled;
     soundToggle.textContent=soundEnabled?'🔊':'🔇';
+    
+    // Show toast notification
+    if(soundEnabled){
+        showToast('🔊 Звук включен', 'success');
+    } else {
+        showToast('🔇 Звук выключен', 'error');
+    }
 }
 function play(s){
     if(!soundEnabled)return;
@@ -1139,10 +1191,24 @@ function updateHistory(){
 
 /* SECTORS */
 function addSector(){
-    if(!sectorInput.value.trim()||spinning||blinking)return;
-    sectors.push(sectorInput.value.trim());
+    const sectorText = sectorInput.value.trim();
+    
+    // Check if field is empty
+    if(!sectorText){
+        showToast('❌ Введите текст сектора', 'error');
+        return;
+    }
+    
+    // Check if wheel is busy
+    if(spinning||blinking) return;
+    
+    // Add sector
+    sectors.push(sectorText);
     sectorInput.value='';
     draw();
+    
+    // Show success notification
+    showToast('✅ Сектор добавлен', 'success');
 }
 function resetWheel(){
     if(spinning||blinking)return;
@@ -1192,7 +1258,7 @@ function showToast(message, type = 'success'){
 
 function copyHistory(){
     if(history.length === 0){
-        showToast('История пуста', 'error');
+        showToast('❌ История пуста', 'error');
         return;
     }
     
@@ -1208,7 +1274,7 @@ function copyHistory(){
 
 function clearHistory(){
     if(history.length === 0){
-        showToast('История уже пуста', 'error');
+        showToast('❌ История уже пуста', 'error');
         return;
     }
     
@@ -1265,7 +1331,7 @@ function updateSectorList(){
         html += `
             <div class="sector-item">
                 <div class="sector-color-strip" style="background:${bgColor}"></div>
-                <div class="sector-text" title="${sector}">${displayText}</div>
+                <input class="sector-edit-input" type="text" value="${sector}" data-index="${index}" onblur="updateSectorText(this)" onkeypress="handleSectorKeyPress(event, this)">
                 <button class="delete-sector" onclick="deleteSector(${index})">✕</button>
             </div>
         `;
@@ -1288,15 +1354,15 @@ function deleteSector(index){
             
             // Get the color strip and text elements to preserve them
             const colorStrip = targetItem.querySelector('.sector-color-strip');
-            const sectorTextElement = targetItem.querySelector('.sector-text');
+            const sectorInput = targetItem.querySelector('.sector-edit-input');
             const bgColor = colorStrip ? colorStrip.style.background : '#6c757d';
-            // Preserve the full HTML content including links
-            const sectorHtml = sectorTextElement ? sectorTextElement.innerHTML : '';
+            // Preserve the input value
+            const sectorValue = sectorInput ? sectorInput.value : '';
             
-            // Replace with confirm/cancel buttons (preserving color and formatted text)
+            // Replace with confirm/cancel buttons (preserving color and input)
             targetItem.innerHTML = `
                 <div class="sector-color-strip" style="background:${bgColor}"></div>
-                <div class="sector-text">${sectorHtml}</div>
+                <input class="sector-edit-input" type="text" value="${sectorValue}" data-index="${index}" readonly style="background: rgba(255,255,255,0.1); color: #fff;">
                 <div style="flex:1"></div>
                 <div class="confirm-delete">
                     <button class="confirm-btn" onclick="confirmDelete(${index})">✓</button>
@@ -1320,6 +1386,31 @@ function confirmDelete(index){
 function cancelDelete(index){
     // Just refresh the list to restore original state
     updateSectorList();
+}
+
+// Handle sector text editing
+function updateSectorText(inputElement){
+    const index = parseInt(inputElement.dataset.index);
+    const newText = inputElement.value.trim();
+    
+    if(newText && index >= 0 && index < sectors.length){
+        sectors[index] = newText;
+        draw(); // Update the wheel visualization
+    } else if(!newText){
+        // If text is empty, revert to original value
+        inputElement.value = sectors[index];
+    }
+}
+
+function handleSectorKeyPress(event, inputElement){
+    if(event.key === 'Enter'){
+        inputElement.blur(); // Trigger the blur event to save changes
+    } else if(event.key === 'Escape'){
+        // Revert to original value and blur
+        const index = parseInt(inputElement.dataset.index);
+        inputElement.value = sectors[index];
+        inputElement.blur();
+    }
 }
 
 // Update sector list when adding sectors
