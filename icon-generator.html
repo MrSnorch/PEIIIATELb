@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Icon Generator</title>
+</head>
+<body>
+    <h1>Generating PWA Icons...</h1>
+    <canvas id="canvas" style="display:none;"></canvas>
+    <div id="status"></div>
+    
+    <script>
+        async function generateIcons() {
+            const canvas = document.getElementById('canvas');
+            const ctx = canvas.getContext('2d');
+            const status = document.getElementById('status');
+            
+            // Load SVG as image
+            const img = new Image();
+            img.src = 'icon.svg';
+            
+            img.onload = function() {
+                const sizes = [192, 512];
+                
+                sizes.forEach(size => {
+                    canvas.width = size;
+                    canvas.height = size;
+                    
+                    // Clear canvas
+                    ctx.clearRect(0, 0, size, size);
+                    
+                    // Draw SVG scaled to fit
+                    const scale = Math.min(size / img.width, size / img.height);
+                    const x = (size - img.width * scale) / 2;
+                    const y = (size - img.height * scale) / 2;
+                    
+                    ctx.drawImage(img, x, y, img.width * scale, img.height * scale);
+                    
+                    // Convert to PNG and trigger download
+                    canvas.toBlob(function(blob) {
+                        const url = URL.createObjectURL(blob);
+                        const a = document.createElement('a');
+                        a.href = url;
+                        a.download = `icon-${size}x${size}.png`;
+                        document.body.appendChild(a);
+                        a.click();
+                        document.body.removeChild(a);
+                        URL.revokeObjectURL(url);
+                        
+                        status.innerHTML += `<p>Generated icon-${size}x${size}.png</p>`;
+                    }, 'image/png');
+                });
+                
+                status.innerHTML += '<p><strong>All icons generated! Move the downloaded files to the "icons" folder.</strong></p>';
+            };
+        }
+        
+        // Auto-run when page loads
+        window.onload = generateIcons;
+    </script>
+</body>
+</html>

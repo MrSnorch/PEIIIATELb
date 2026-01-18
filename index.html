@@ -1,0 +1,1496 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="theme-color" content="#16213e">
+<meta name="description" content="Интерактивное приложение для генерации случайных решений: монета, кубик, колесо фортуны">
+<meta name="keywords" content="randomizer, генератор, монета, кубик, колесо фортуны, gambling, chance">
+
+<!-- PWA Meta Tags -->
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icons/icon-192x192.png">
+<link rel="icon" type="image/svg+xml" href="icon.svg">
+
+<!-- Apple PWA Tags -->
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Решатель">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-capable" content="yes">
+
+<!-- Microsoft PWA Tags -->
+<meta name="msapplication-TileColor" content="#16213e">
+<meta name="msapplication-TileImage" content="icons/icon-144x144.png">
+<meta name="application-name" content="Решатель">
+
+<!-- Other PWA enhancements -->
+<meta name="format-detection" content="telephone=no">
+<meta name="HandheldFriendly" content="true">
+<title>Решатель</title>
+
+<style>
+*{box-sizing:border-box}
+
+body{
+    margin:0;
+    min-height:100vh;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    font-family:system-ui,Arial,sans-serif;
+    background:radial-gradient(circle at top,#1b1f2a,#07080d);
+    color:#fff
+}
+
+.box{
+    width:100%;
+    max-width:460px;
+    background:rgba(20,24,36,.85);
+    backdrop-filter:blur(14px);
+    border-radius:26px;
+    padding:26px;
+    box-shadow:0 35px 70px rgba(0,0,0,.75);
+    margin:10px;
+}
+
+@media (max-width: 480px) {
+    .box {
+        padding: 20px;
+        border-radius: 20px;
+        margin: 5px;
+    }
+    
+    .grid {
+        gap: 10px;
+    }
+    
+    .card {
+        padding: 12px;
+    }
+}
+
+.grid{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:14px
+}
+
+.card{
+    position:relative;
+    background:rgba(255,255,255,.04);
+    border-radius:18px;
+    padding:16px;
+    text-align:center;
+    display:flex;
+    flex-direction:column;
+}
+
+.card > button:last-child{
+    margin-top:auto;
+    margin-bottom:0;
+}
+.card.full{grid-column:1 / -1}
+
+/* VISUAL */
+.visual{
+    font-size:60px;
+    user-select:none;
+    display:inline-block;
+    transform-style:preserve-3d;
+    perspective:800px;
+}
+
+/* BUTTONS */
+button{
+    width:100%;
+    margin-top:8px;
+    padding:12px;
+    border-radius:14px;
+    border:none;
+    cursor:pointer;
+    font-weight:600;
+    color:#eaf0ff;
+    background:linear-gradient(135deg,#2a3355,#1a2140);
+    box-shadow:0 6px 16px rgba(0,0,0,.45);
+    transition:.15s;
+}
+button:hover{transform:translateY(-1px)}
+button:active{transform:translateY(1px)}
+
+.settings-btn{
+    position:absolute;
+    top:8px;
+    right:8px;
+    width:auto!important;
+    padding:4px 6px;
+    font-size:13px;
+    border-radius:8px;
+    background:rgba(255,255,255,.12);
+    color:#fff;
+}
+
+.settings{
+    display:none;
+    margin-top:8px;
+    background:rgba(0,0,0,.35);
+    padding:8px;
+    border-radius:10px;
+    font-size:13px;
+    text-align:left
+}
+.settings label{display:block;margin-bottom:6px}
+
+/* ANIMATIONS */
+.coin.toss{animation:coinToss 1s ease-in-out}
+@keyframes coinToss{
+    0%{transform:translateY(0) rotateX(0deg)}
+    40%{transform:translateY(-28px) rotateX(720deg)}
+    100%{transform:translateY(0) rotateX(1080deg)}
+}
+.dice.roll{animation:diceToss 1s ease-in-out}
+@keyframes diceToss{
+    0%{transform:translateY(0) rotate(0deg)}
+    40%{transform:translateY(-28px) rotate(1080deg)}
+    100%{transform:translateY(0) rotate(1440deg)}
+}
+
+/* LOGS */
+.log{
+    margin-top:6px;
+    min-height:30px; /* Ensure space for copy message */
+    font-size:14px;
+    opacity:0;
+    transform:translateY(10px);
+    transition:.3s;
+    height:auto; /* Allow content to determine height while maintaining min-height */
+}
+
+.wheel-section-bottom{
+    margin-top:8px;
+    min-height:80px; /* Reserve space for log message + history */
+    position:relative;
+}
+
+.wheel-section-bottom .log{
+    position:absolute;
+    top:0;
+    left:0;
+    right:0;
+    min-height:30px;
+    margin-top:0;
+}
+#wheelLog:empty{
+    margin-top:0;
+    min-height:30px; /* Maintain space even when empty */
+}
+.log.show{opacity:1;transform:translateY(0)}
+.movie{color:#ffd66b;font-weight:600}
+
+/* HISTORY */
+.history-container{
+    margin-top:12px;
+    background:rgba(255,255,255,.04);
+    border-radius:14px;
+    padding:10px;
+    height:145px;
+    font-size:14px;
+    display:flex;
+    flex-direction:column;
+    position:relative;
+}
+
+/* Custom scrollbar for history */
+.history-scroll-wrapper::-webkit-scrollbar {
+    width: 12px;
+}
+
+.history-scroll-wrapper::-webkit-scrollbar-track {
+    background: rgba(0,0,0,.2);
+    border-radius: 8px;
+    margin: 4px 10px 4px 0;
+}
+
+.history-scroll-wrapper::-webkit-scrollbar-thumb {
+    background: #393b46;
+    border-radius: 0 8px 8px 0;
+    border: 2px solid transparent;
+    background-clip: padding-box;
+    box-shadow: inset 0 0 0 2px rgba(0,0,0,.3);
+}
+
+.history-scroll-wrapper::-webkit-scrollbar-thumb:hover {
+    background: #4a4c5a;
+    border-radius: 0 8px 8px 0;
+    box-shadow: inset 0 0 0 2px rgba(0,0,0,.4);
+}
+
+.history-scroll-wrapper::-webkit-scrollbar-thumb:active {
+    background: #2a2c35;
+    border-radius: 0 8px 8px 0;
+}
+
+/* Firefox scrollbar */
+.history-scroll-wrapper {
+    scrollbar-width: thin;
+    scrollbar-color: #393b46 rgba(0,0,0,.2);
+}
+.history-divider{
+    height:1px;
+    background:rgba(255,255,255,.1);
+    margin:12px 0 4px 0;
+    flex-shrink:0;
+    display:block; /* Always visible */
+}
+
+.history-scroll-wrapper{
+    flex:1;
+    overflow-y:auto;
+    margin-top:4px;
+}
+
+.history-header{
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    margin-bottom:1px;
+    position:relative;
+    flex-shrink:0;
+}
+
+.history-title{
+    text-align:center;
+    flex:1;
+}
+
+.history-copy-btn{
+    position:absolute;
+    top:-8px;
+    left:0px;
+    width:auto!important;
+    padding:4px 6px;
+    font-size:13px;
+    border-radius:8px;
+    background:rgba(255,255,255,.12);
+    color:#fff;
+    cursor:pointer;
+    z-index:10;
+    border:none;
+    display:block; /* Visible by default */
+    transition:all .2s ease;
+}
+
+.history-clear-btn{
+    position:absolute;
+    top:-8px;
+    right:0px;
+    width:auto!important;
+    padding:4px 6px;
+    font-size:13px;
+    border-radius:8px;
+    background:rgba(255,255,255,.12);
+    color:#fff;
+    cursor:pointer;
+    z-index:10;
+    border:none;
+    display:block;
+    transition:all .2s ease;
+}
+
+.history-copy-btn:hover{
+    background:rgba(255,255,255,.2);
+    transform:scale(1.05);
+}
+
+.history-clear-btn:hover{
+    background:rgba(255,255,255,.2);
+    transform:scale(1.05);
+}
+
+/* Toast Notification */
+.toast-notification{
+    position:fixed;
+    top:20px;
+    right:20px;
+    background:rgba(0,0,0,.85);
+    backdrop-filter:blur(10px);
+    border-radius:12px;
+    padding:16px;
+    z-index:1000;
+    box-shadow:0 6px 16px rgba(0,0,0,.45);
+    transform:translateX(120%);
+    transition:transform 0.3s ease-out;
+    min-width:200px;
+    text-align:center;
+}
+
+.toast-notification.show{
+    transform:translateX(0);
+}
+
+.toast-notification.success{
+    border-left:4px solid #4caf50;
+}
+
+.toast-notification.error{
+    border-left:4px solid #f44336;
+}
+
+.toast-message{
+    color:#fff;
+    font-size:14px;
+    margin:0;
+}
+.history-scroll-wrapper ul{list-style:none;padding:0;margin:0;text-align:left}
+.history-scroll-wrapper li{margin-bottom:4px}
+
+.sector-actions{
+    position:relative;
+    margin:8px 0;
+}
+
+.sector-actions input{
+    width:100%;
+    margin:0;
+    padding-right:36px; /* Space for the button */
+}
+
+.sector-actions .history-copy-btn{
+    flex-shrink:0;
+}
+
+.sector-add-btn{
+    position:absolute;
+    right:5px;
+    top:-3px;
+    transform:none;
+    width:auto!important;
+    padding:4px 6px;
+    font-size:13px;
+    border-radius:8px;
+    background:rgba(255,255,255,.12);
+    color:#fff;
+    cursor:pointer;
+    border:none;
+    z-index:2;
+}
+
+.sector-add-btn:hover{
+    background:rgba(255,255,255,.2);
+    transform:scale(1.05)!important;
+    top:-3px!important;
+}
+
+.wheel-copy-btn{
+    position:absolute;
+    top:120px;
+    left:130px;
+    transform:translate(-50%, -50%);
+    width:48px;
+    height:48px;
+    border-radius:50%;
+    background:rgba(255,255,255,.12);
+    color:#fff;
+    cursor:pointer;
+    z-index:10;
+    border:none;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-size:20px;
+    padding:0;
+}
+
+.wheel-copy-btn:hover{
+    transform:translate(-50%, -50%)!important;
+}
+
+
+
+.wheel-wrap{
+    position:relative;
+    display:inline-block;
+}
+
+.wheel-copy-btn:hover{
+    background:rgba(255,255,255,.2);
+    transform:scale(1.05);
+}
+
+.card.full{
+    position:relative;
+}
+
+/* LINKS */
+.history a,
+.history a:hover{
+    text-decoration:underline;
+}
+
+
+
+/* INPUT */
+input{
+    width:100%;
+    margin-top:6px;
+    padding:10px 12px;
+    border-radius:12px;
+    border:none;
+    background:rgba(255,255,255,.08);
+    color:#fff;
+}
+
+/* WHEEL */
+.arrow{
+    margin:-6px auto 0;
+    width:0;height:0;
+    border-left:10px solid transparent;
+    border-right:10px solid transparent;
+    border-top:18px solid #ffd66b
+}
+
+.wheel-wrap{
+    position:relative;
+    width:260px;
+    height:260px;
+    margin:10px auto;
+}
+
+canvas{
+    display:block;
+    filter:drop-shadow(0 6px 10px rgba(0,0,0,.45));
+    cursor:default;
+}
+
+/* FIX: кнопки Добавить / Сброс в одну строку */
+.btn-row{
+    display:flex;
+    gap:8px;
+    margin-top:8px;
+}
+
+.btn-row button{
+    flex:1;
+}
+/* 🔊 Переключатель звука — левый верх */
+.wheel-sound-btn{
+    position:absolute;
+    top:2px;
+    left:10px;
+    width:auto!important;
+    padding:4px 6px;
+    font-size:13px;
+    border-radius:8px;
+    background:rgba(255,255,255,.12);
+    color:#fff;
+    cursor:pointer;
+    z-index:10;
+}
+
+.wheel-sound-btn:hover{
+    background:rgba(255,255,255,.2);
+    transform:scale(1.05);
+}
+
+/* ⚙️ Настройки колеса — правый верх */
+.wheel-settings-btn{
+    position:absolute;
+    top:2px;
+    right:10px;
+    width:auto!important;
+    padding:4px 6px;
+    font-size:13px;
+    border-radius:8px;
+    background:rgba(255,255,255,.12);
+    color:#fff;
+    cursor:pointer;
+    z-index:10;
+    transition:all .2s ease;
+}
+
+/* ⚙️ Настройки монетки и кубика */
+.coin-settings-btn, .dice-settings-btn{
+    position:absolute;
+    top:2px;
+    right:10px;
+    width:auto!important;
+    padding:4px 6px;
+    font-size:13px;
+    border-radius:8px;
+    background:rgba(255,255,255,.12);
+    color:#fff;
+    cursor:pointer;
+    z-index:10;
+    transition:all .2s ease;
+}
+
+.coin-settings-btn:hover, .dice-settings-btn:hover, .wheel-settings-btn:hover{
+    background:rgba(255,255,255,.2);
+    transform:scale(1.05);
+}
+
+.coin-settings-btn.active, .dice-settings-btn.active, .wheel-settings-btn.active{
+    background:rgba(255,255,255,.2);
+    box-shadow:0 0 8px rgba(255,255,255,.3);
+    border:1px solid rgba(255,255,255,.2);
+}
+
+/* Special positioning for coin settings - left side */
+.coin-settings-btn{
+    top:2px;
+    left:10px;
+    right:auto;
+}
+
+.coin-settings, .dice-settings{
+    display:none;
+    position:absolute;
+    top:44px;
+    right:8px;
+    left:8px;
+    background:rgba(0,0,0,.85);
+    backdrop-filter:blur(10px);
+    border-radius:12px;
+    padding:12px;
+    z-index:20;
+    box-shadow:0 6px 16px rgba(0,0,0,.45);
+}
+
+.settings-header{
+    margin:0 0 8px 0;
+    font-size:14px;
+    color:#ffd66b;
+    text-align:center;
+}
+
+.settings-form{
+    display:flex;
+    flex-direction:column;
+    gap:8px;
+}
+
+.settings-input{
+    width:100%;
+    padding:8px 10px;
+    border-radius:8px;
+    border:none;
+    background:rgba(255,255,255,.08);
+    color:#fff;
+    font-size:13px;
+}
+
+.settings-input:focus{
+    outline:none;
+    background:rgba(255,255,255,.12);
+}
+
+.settings-label{
+    font-size:12px;
+    color:#aaa;
+    margin-bottom:4px;
+    display:block;
+}
+
+.wheel-settings{
+    display:none;
+    position:absolute;
+    top:48px;
+    right:12px;
+    left:12px;
+    background:rgba(0,0,0,.85);
+    backdrop-filter:blur(10px);
+    border-radius:12px;
+    padding:16px;
+    z-index:20;
+    box-shadow:0 6px 16px rgba(0,0,0,.45);
+}
+
+.wheel-settings h3{
+    margin:0 0 10px 0;
+    font-size:14px;
+    color:#ffd66b;
+    text-align:center;
+}
+
+.sector-list{
+    max-height:200px;
+    overflow-y:auto;
+    margin-bottom:10px;
+    background:rgba(255,255,255,.04);
+    border-radius:8px;
+    padding:4px;
+}
+
+/* Custom scrollbar styling */
+.sector-list::-webkit-scrollbar {
+    width: 12px;
+}
+
+.sector-list::-webkit-scrollbar-track {
+    background: rgba(0,0,0,.2);
+    border-radius: 8px;
+    margin: 4px 0;
+}
+
+.sector-list::-webkit-scrollbar-thumb {
+    background: #393b46;
+    border-radius: 0 8px 8px 0;
+    border: 2px solid transparent;
+    background-clip: padding-box;
+    box-shadow: inset 0 0 0 2px rgba(255,255,255,.1);
+}
+
+.sector-list::-webkit-scrollbar-thumb:hover {
+    background: #4a4c5a;
+    border-radius: 0 8px 8px 0;
+    box-shadow: inset 0 0 0 2px rgba(255,255,255,.2);
+}
+
+.sector-list::-webkit-scrollbar-thumb:active {
+    background: #2a2c35;
+    border-radius: 0 8px 8px 0;
+}
+
+/* Firefox scrollbar */
+.sector-list {
+    scrollbar-width: thin;
+    scrollbar-color: #393b46 rgba(0,0,0,.2);
+}
+
+
+
+.sector-item{
+    display:flex;
+    justify-content:flex-start;
+    align-items:center;
+    padding:6px 8px 6px 12px;
+    margin-bottom:3px;
+    background:rgba(0,0,0,.85);
+    backdrop-filter:blur(10px);
+    border-radius:12px;
+    box-shadow:0 2px 8px rgba(0,0,0,.3);
+    font-size:12px;
+    transition:.2s;
+    min-height:32px;
+    position:relative;
+    border-left:none;
+    overflow: visible;
+    transform: translateY(2px);
+}
+
+.sector-item > * {
+    align-self: center;
+}
+
+.sector-text{
+    color:#fff;
+    font-size:12px;
+    white-space:nowrap;
+    overflow:hidden;
+    text-overflow:ellipsis;
+    flex: 0 1 auto;
+    margin-left: 6px;
+    margin-right: 20px;
+}
+
+.sector-edit-input{
+    background: rgba(255,255,255,0.08);
+    border: 1px solid rgba(255,255,255,0.15);
+    color: #fff;
+    font-size: 12px;
+    flex: 1 1 auto;
+    margin: 0 8px 0 6px;
+    outline: none;
+    min-width: 80px;
+    max-width: 284px;
+    padding: 2px 4px;
+    border-radius: 4px;
+    cursor: text;
+}
+
+.sector-edit-input:focus{
+    background: rgba(255,255,255,0.15);
+    border: 1px solid rgba(255,255,255,0.3);
+    box-shadow: 0 0 0 2px rgba(255,255,255,0.2);
+}
+
+.sector-item .sector-edit-input[readonly]{
+    cursor: not-allowed;
+    opacity: 0.8;
+}
+
+.sector-edit-input:hover:not(:focus):not([readonly]){
+    background: rgba(255,255,255,0.12);
+    border: 1px solid rgba(255,255,255,0.2);
+}
+
+.confirm-delete{
+    flex-shrink: 0;
+    margin-left: 8px;
+}
+
+.sector-text a{
+    color:#7cc7ff;
+    text-decoration:none;
+}
+
+.sector-text a:hover{
+    text-decoration:underline;
+}
+
+
+
+.sector-color-strip{
+    position: absolute;
+    left: 0;
+    top: 0;
+    height: 100%;
+    width: 8px;
+    border-radius: 12px 0 0 12px;
+    z-index: 10;
+    box-shadow: 0 0 0 1px rgba(255,255,255,0.1);
+    opacity: 0.9;
+}
+
+.delete-sector{
+    background:#ff4757;
+    color:white;
+    border:none;
+    border-radius:4px;
+    padding:0;
+    font-size:16px;
+    line-height:1;
+    cursor:pointer;
+    transition:.2s;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    width:24px;
+    height:24px;
+    flex-shrink:0;
+    margin-left:auto;
+    align-self:center;
+    position: relative;
+    top: -4px;
+}
+
+.delete-sector:hover{
+    background:#ff2e42;
+    transform: scale(1.05);
+}
+
+.delete-sector:active{
+    transform: scale(0.95);
+}
+
+.sector-item.deleting{
+    background:rgba(255,71,87,.3) !important;
+    border-left:0px solid #ff4757 !important;
+    height: 44px;
+    animation:pulse 0.3s ease-in-out;
+}
+
+@keyframes pulse{
+    0% { transform: translateY(2px) scale(1); }
+    50% { transform: translateY(2px) scale(1.02); }
+    100% { transform: translateY(2px) scale(1); }
+}
+
+.confirm-delete{
+    display:flex;
+    gap:4px;
+    position: relative;
+    top: -4px;
+}
+
+.confirm-btn{
+    background:#ff4757;
+    color:white;
+    border:none;
+    border-radius:3px;
+    padding:2px 6px;
+    font-size:14px;
+    line-height:1;
+    cursor:pointer;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    width:22px;
+    height:22px;
+}
+
+.cancel-btn{
+    background:#6c757d;
+    color:white;
+    border:none;
+    border-radius:3px;
+    padding:2px 6px;
+    font-size:14px;
+    line-height:1;
+    cursor:pointer;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    width:22px;
+    height:22px;
+}
+
+.confirm-clear-history{
+    position:absolute;
+    top:-8px;
+    right:0px;
+    display:flex;
+    gap:4px;
+}
+
+.empty-message{
+    text-align:center;
+    color:#aaa;
+    font-size:13px;
+    padding:10px;
+}
+</style>
+</head>
+
+<body>
+<div class="box">
+<div class="grid">
+
+<!-- COIN -->
+<div class="card">
+<button class="coin-settings-btn" onclick="playClick(); toggle('coinSettings')">⚙️</button>
+<div class="visual coin" id="coin">🪙</div>
+<div class="coin-settings" id="coinSettings">
+    <div class="settings-header">🪙 Настройки монетки</div>
+    <div class="settings-form">
+        <div>
+            <label class="settings-label">Аверс</label>
+            <input class="settings-input" id="eagleText" value="ФИЛЬМ">
+        </div>
+        <div>
+            <label class="settings-label">Реверс</label>
+            <input class="settings-input" id="tailsText" value="СЕРИАЛ">
+        </div>
+        <div>
+            <label class="settings-label">Гурт</label>
+            <input class="settings-input" id="edgeText" value="АНИМЕ">
+        </div>
+        <div>
+            <label class="settings-label">Шанс Гурта (%)</label>
+            <input class="settings-input" id="edgeChance" type="number" min="0" max="100" value="1">
+        </div>
+    </div>
+</div>
+<div class="log" id="coinLog"></div>
+<button onclick="coinFlip()">ПОДБРОСИТЬ</button>
+</div>
+
+<!-- DICE -->
+<div class="card">
+<button class="dice-settings-btn" onclick="playClick(); toggle('diceSettings')">⚙️</button>
+<div class="visual dice" id="dice">🎲</div>
+<div class="dice-settings" id="diceSettings">
+    <div class="settings-header">🎲 Настройки кубика</div>
+    <div class="settings-form">
+        <div>
+            <label class="settings-label">Минимум</label>
+            <input class="settings-input" id="diceMin" type="number" value="1">
+        </div>
+        <div>
+            <label class="settings-label">Максимум</label>
+            <input class="settings-input" id="diceMax" type="number" value="3">
+        </div>
+    </div>
+</div>
+<div class="log" id="diceLog"></div>
+<button onclick="rollDice()">ПОДБРОСИТЬ</button>
+</div>
+
+<!-- WHEEL -->
+<div class="card full">
+<div class="arrow"></div>
+
+<!-- Переключатель звука -->
+<button class="wheel-sound-btn" id="soundToggle" onclick="playClickAlways(); toggleSound()">🔊</button>
+
+<!-- Настройки колеса -->
+<button class="wheel-settings-btn" onclick="playClick(); toggle('wheelSettings')">✏️</button>
+<div class="wheel-settings" id="wheelSettings">
+    <h3>✏️ Редактор секторов</h3>
+    <div class="sector-list" id="sectorList">
+        <div class="empty-message">Нет секторов для удаления</div>
+    </div>
+</div>
+
+<div class="wheel-wrap">
+<canvas id="wheel" width="260" height="260"></canvas>
+<button class="wheel-copy-btn" onclick="playClick(); copySectors()">📋</button>
+</div>
+
+<div class="sector-actions">
+    <input id="sectorInput" placeholder="Текст сектора">
+    <button class="sector-add-btn" onclick="playClick(); addSector()">➕</button>
+</div>
+
+<button onclick="spinWheel()">КРУТИТЬ</button>
+
+<div class="wheel-section-bottom">
+    <div class="log" id="wheelLog"></div>
+    <div class="history-container">
+<div class="history-header">
+    <button class="history-clear-btn" onclick="playClick(); clearHistory()">🗑️</button>
+    <div class="history-title">📜 История</div>
+    <button class="history-copy-btn" onclick="playClick(); copyHistory()">📋</button>
+</div>
+<div class="history-divider"></div>
+<div class="history-scroll-wrapper">
+    <ul id="wheelHistory"></ul>
+</div>
+</div>
+
+</div>
+</div>
+</div>
+</div>
+
+<!-- AUDIO -->
+<audio id="sndCoin"  src="sounds/coin.mp3" preload="auto"></audio>
+<audio id="sndDice"  src="sounds/dice.mp3" preload="auto"></audio>
+<audio id="sndWheel" src="sounds/wheel.mp3" preload="auto"></audio>
+<audio id="sndBell"  src="sounds/bell.mp3" preload="auto"></audio>
+<audio id="sndClick" src="sounds/click.mp3" preload="auto"></audio>
+
+<!-- Toast Notification -->
+<div class="toast-notification" id="toastNotification">
+    <p class="toast-message" id="toastMessage"></p>
+</div>
+
+<script>
+/* helpers */
+function toggle(id){
+    const e=document.getElementById(id);
+    const isVisible = e.style.display === 'block';
+    e.style.display = isVisible ? 'none' : 'block';
+    
+    // Update button active state
+    const buttonMap = {
+        'coinSettings': 'coin-settings-btn',
+        'diceSettings': 'dice-settings-btn',
+        'wheelSettings': 'wheel-settings-btn'
+    };
+    
+    if(buttonMap[id]){
+        const button = document.querySelector('.' + buttonMap[id]);
+        if(button){
+            if(isVisible){
+                button.classList.remove('active');
+            } else {
+                button.classList.add('active');
+            }
+        }
+    }
+    
+    // Remove active state from other settings buttons
+    Object.keys(buttonMap).forEach(key => {
+        if(key !== id){
+            const otherButton = document.querySelector('.' + buttonMap[key]);
+            if(otherButton){
+                otherButton.classList.remove('active');
+            }
+        }
+    });
+}
+function showLog(id,html){
+    const el=document.getElementById(id);
+    el.classList.remove('show');
+    el.innerHTML=html;
+    void el.offsetWidth;
+    el.classList.add('show');
+}
+function isURL(text){return /^(https?:\/\/)/i.test(text)}
+function formatLink(text){
+    const safe=text.replace(/"/g,'&quot;');
+    return `<a href="${safe}" target="_blank" rel="noopener noreferrer">${safe}</a>`;
+}
+
+/* SOUND */
+let soundEnabled=true;
+const sndCoin=document.getElementById('sndCoin');
+const sndDice=document.getElementById('sndDice');
+const sndWheel=document.getElementById('sndWheel');
+const sndBell=document.getElementById('sndBell');
+const sndClick=document.getElementById('sndClick');
+[sndCoin,sndDice,sndWheel,sndBell,sndClick].forEach(s=>s.volume=0.6);
+
+function toggleSound(){
+    soundEnabled=!soundEnabled;
+    soundToggle.textContent=soundEnabled?'🔊':'🔇';
+    
+    // Show toast notification
+    if(soundEnabled){
+        showToast('🔊 Звук включен', 'success');
+    } else {
+        showToast('🔇 Звук выключен', 'error');
+    }
+}
+function play(s){
+    if(!soundEnabled)return;
+    s.currentTime=0;
+    s.play().catch(()=>{});
+}
+
+function playClick(){
+    if(!soundEnabled)return;
+    sndClick.currentTime=0;
+    sndClick.play().catch(()=>{});
+}
+
+function playClickAlways(){
+    // Always play click sound regardless of soundEnabled state
+    sndClick.currentTime=0;
+    sndClick.play().catch(()=>{});
+}
+
+/* COIN */
+function coinFlip(){
+    coinLog.innerHTML='';
+    coin.classList.remove('toss');void coin.offsetWidth;coin.classList.add('toss');
+    play(sndCoin);
+    setTimeout(()=>{
+        showLog(
+            'coinLog',
+`Результат: <span class="movie">${(() => {
+            // Check for edge landing with configurable chance
+            const edgeChanceValue = parseFloat(edgeChance.value) || 5;
+            const isEdge = Math.random() * 100 < edgeChanceValue;
+            
+            if(isEdge){
+                return edgeText.value;
+            } else {
+                return Math.random() < 0.5 ? eagleText.value : tailsText.value;
+            }
+        })()}</span>`
+        );
+    },1100);
+}
+
+/* DICE */
+function rollDice(){
+    diceLog.innerHTML='';
+    dice.classList.remove('roll');void dice.offsetWidth;dice.classList.add('roll');
+    play(sndDice);
+    const min=+diceMin.value,max=+diceMax.value;
+    const n=Math.floor(Math.random()*(max-min+1))+min;
+    setTimeout(()=>{
+        showLog('diceLog',`Результат: <span class="movie">${n}</span>`);
+    },1100);
+}
+
+/* WHEEL */
+const ctx=wheel.getContext('2d');
+let sectors=[],angle=0,spinning=false,blinking=false,history=[];
+let highlightIndex=null,blinkPhase=0;
+
+function draw(){
+    ctx.clearRect(0,0,260,260);
+    const cx=130,cy=130,r=130;
+
+    ctx.beginPath();
+    ctx.arc(cx,cy,r,0,Math.PI*2);
+    ctx.fillStyle='#252833';
+    ctx.fill();
+
+    if(sectors.length){
+        const step=2*Math.PI/sectors.length;
+        sectors.forEach((t,i)=>{
+            const start=i*step+angle;
+
+            ctx.beginPath();
+            ctx.moveTo(cx,cy);
+            ctx.arc(cx,cy,r,start,start+step);
+            ctx.closePath();
+
+            if(i===highlightIndex){
+                // Create a ring-shaped path for blinking (exclude center)
+                ctx.save();
+                ctx.beginPath();
+                ctx.arc(cx,cy,r,start,start+step);
+                ctx.arc(cx,cy,14,start+step,start,true);
+                ctx.closePath();
+                ctx.fillStyle=`hsla(${i*360/sectors.length},90%,65%,${0.5+0.5*Math.sin(blinkPhase)})`;
+                ctx.fill();
+                ctx.restore();
+            }else{
+                ctx.fillStyle=`hsl(${i*360/sectors.length},70%,45%)`;
+                ctx.fill();
+            }
+
+            ctx.save();
+            ctx.translate(cx,cy);
+            ctx.rotate(start+step/2);
+            ctx.textAlign="right";
+            ctx.textBaseline="middle";
+            ctx.fillStyle="#fff";
+            ctx.font="14px system-ui";
+
+            let label=t;
+            while(ctx.measureText(label+"…").width>90 && label.length){
+                label=label.slice(0,-1);
+            }
+            if(label!==t)label+="…";
+
+            ctx.fillText(label,r-16,0);
+            ctx.restore();
+        });
+    }
+
+    ctx.save();
+    ctx.globalCompositeOperation='destination-out';
+    ctx.beginPath();
+    ctx.arc(cx,cy,24,0,Math.PI*2);
+    ctx.fill();
+    ctx.restore();
+    
+    ctx.beginPath();
+    ctx.arc(cx,cy,24,0,Math.PI*2);
+    ctx.strokeStyle="#ffd66b";
+    ctx.lineWidth=2;
+    ctx.stroke();
+
+    ctx.beginPath();
+    ctx.arc(cx,cy,r-1,0,Math.PI*2);
+    ctx.strokeStyle="#ffd66b";
+    ctx.lineWidth=2;
+    ctx.stroke();
+}
+draw();
+
+/* SPIN WHEEL */
+function spinWheel(){
+    // Check if there are enough sectors
+    if(sectors.length < 2){
+        showToast('❌ Добавьте минимум 2 сектора для вращения', 'error');
+        return;
+    }
+    
+    // Check if wheel is already spinning or blinking
+    if(spinning||blinking)return;
+
+    spinning=true;
+    let speed = Math.random()*0.6 + 0.25;
+    let friction = Math.random()*0.008 + 0.982;
+    let last=null;
+
+    const spin=setInterval(()=>{
+        angle+=speed;
+        speed*=friction;
+        draw();
+
+        const step=2*Math.PI/sectors.length;
+        const idx=Math.floor(((2*Math.PI-((angle+Math.PI/2)%(2*Math.PI)))%(2*Math.PI))/step);
+        if(idx!==last){ play(sndWheel); last=idx }
+
+        if(Math.abs(speed)<.005){
+            clearInterval(spin);
+            spinning=false;
+
+            const result=sectors[idx];
+            history.push(result);
+            updateHistory();
+
+            highlightIndex=idx;
+            blinkPhase=0;
+            blinking=true;
+
+            const blink=setInterval(()=>{
+                blinkPhase+=0.25;
+                draw();
+            },30);
+
+            play(sndBell);
+
+            setTimeout(()=>{
+                clearInterval(blink);
+                highlightIndex=null;
+                blinking=false;
+                sectors.splice(idx,1);
+                updateSectorList(); // Update settings panel
+                draw();
+            },3000);
+        }
+    },20);
+}
+
+/* HISTORY */
+function updateHistory(){
+    wheelHistory.innerHTML='';
+    history.forEach((h,i)=>{
+        const li=document.createElement('li');
+        li.innerHTML=`${i+1}. `+(isURL(h)?formatLink(h):h);
+        wheelHistory.appendChild(li);
+    });
+    
+    // Update copy button visibility
+    updateHistoryCopyButton();
+}
+
+/* SECTORS */
+function addSector(){
+    const sectorText = sectorInput.value.trim();
+    
+    // Check if field is empty
+    if(!sectorText){
+        showToast('❌ Введите текст сектора', 'error');
+        return;
+    }
+    
+    // Check if wheel is busy
+    if(spinning||blinking) return;
+    
+    // Add sector
+    sectors.push(sectorText);
+    sectorInput.value='';
+    draw();
+    
+    // Show success notification
+    showToast('✅ Сектор добавлен', 'success');
+}
+function resetWheel(){
+    if(spinning||blinking)return;
+    sectors=[];history=[];
+    updateHistory();
+    updateSectorList();
+    draw();
+}
+
+function copySectors(){
+    if(sectors.length === 0){
+        showToast('❌ Нет секторов для копирования', 'error');
+        return;
+    }
+    
+    const text = sectors.join('\n');
+    navigator.clipboard.writeText(text).then(() => {
+        showToast('📋 Сектора скопированы в буфер обмена', 'success');
+    }).catch(err => {
+        showToast('❌ Ошибка копирования', 'error');
+        console.error('Failed to copy: ', err);
+    });
+}
+
+function updateHistoryCopyButton(){
+    const copyBtn = document.querySelector('.history-copy-btn');
+    if(copyBtn){
+        copyBtn.style.display = 'block';
+    }
+}
+
+function showToast(message, type = 'success'){
+    const toast = document.getElementById('toastNotification');
+    const toastMessage = document.getElementById('toastMessage');
+    
+    // Clear any existing timeout
+    if(window.toastTimeout){
+        clearTimeout(window.toastTimeout);
+    }
+    
+    // Hide existing notification immediately
+    toast.classList.remove('show');
+    
+    // Set new content and type
+    toastMessage.textContent = message;
+    toast.className = `toast-notification ${type}`;
+    
+    // Force reflow to ensure immediate hiding
+    void toast.offsetWidth;
+    
+    // Show new toast
+    toast.classList.add('show');
+    
+    // Auto-hide after 3 seconds
+    window.toastTimeout = setTimeout(() => {
+        toast.classList.remove('show');
+        window.toastTimeout = null;
+    }, 3000);
+}
+
+function copyHistory(){
+    if(history.length === 0){
+        showToast('❌ История пуста', 'error');
+        return;
+    }
+    
+    // Format history as numbered list
+    const text = history.map((item, index) => `${index + 1}. ${item}`).join('\n');
+    navigator.clipboard.writeText(text).then(() => {
+        showToast('📋 История скопирована в буфер обмена', 'success');
+    }).catch(err => {
+        showLog('wheelLog', '❌ Ошибка копирования истории');
+        console.error('Failed to copy history: ', err);
+    });
+}
+
+function clearHistory(){
+    if(history.length === 0){
+        showToast('❌ История уже пуста', 'error');
+        return;
+    }
+    
+    // Show confirmation UI
+    const clearBtn = document.querySelector('.history-clear-btn');
+    if(clearBtn){
+        // Replace with confirm/cancel buttons
+        clearBtn.outerHTML = `
+            <div class="confirm-clear-history">
+                <button class="confirm-btn" onclick="playClick(); confirmClearHistory()">✓</button>
+                <button class="cancel-btn" onclick="playClick(); cancelClearHistory()">✕</button>
+            </div>
+        `;
+    }
+}
+
+function confirmClearHistory(){
+    history = [];
+    updateHistory();
+    showToast('🗑️ История очищена', 'success');
+    // Restore the clear button
+    restoreClearButton();
+}
+
+function cancelClearHistory(){
+    // Restore the clear button
+    restoreClearButton();
+}
+
+function restoreClearButton(){
+    const header = document.querySelector('.history-header');
+    if(header){
+        const confirmDiv = header.querySelector('.confirm-clear-history');
+        if(confirmDiv){
+            confirmDiv.outerHTML = '<button class="history-clear-btn" onclick="playClick(); clearHistory()">🗑️</button>';
+        }
+    }
+}
+
+/* WHEEL SETTINGS */
+function updateSectorList(){
+    const list = document.getElementById('sectorList');
+    
+    if(sectors.length === 0){
+        list.innerHTML = '<div class="empty-message">Нет секторов для удаления</div>';
+        return;
+    }
+    
+    let html = '';
+    sectors.forEach((sector, index) => {
+        const hue = (index * 360 / sectors.length);
+        const bgColor = `hsl(${hue}, 70%, 45%)`;
+        const displayText = isURL(sector) ? formatLink(sector) : sector;
+        html += `
+            <div class="sector-item">
+                <div class="sector-color-strip" style="background:${bgColor}"></div>
+                <input class="sector-edit-input" type="text" value="${sector}" data-index="${index}" onblur="updateSectorText(this)" onkeypress="handleSectorKeyPress(event, this)">
+                <button class="delete-sector" onclick="playClick(); deleteSector(${index})">✕</button>
+            </div>
+        `;
+    });
+    
+    list.innerHTML = html;
+}
+
+function deleteSector(index){
+    if(spinning || blinking) return;
+    
+    if(index >= 0 && index < sectors.length){
+        // Show confirmation UI
+        const sectorItems = document.querySelectorAll('.sector-item');
+        const targetItem = sectorItems[index];
+        
+        if(targetItem){
+            // Highlight the sector being deleted
+            targetItem.classList.add('deleting');
+            
+            // Get the color strip and text elements to preserve them
+            const colorStrip = targetItem.querySelector('.sector-color-strip');
+            const sectorInput = targetItem.querySelector('.sector-edit-input');
+            const bgColor = colorStrip ? colorStrip.style.background : '#6c757d';
+            // Preserve the input value
+            const sectorValue = sectorInput ? sectorInput.value : '';
+            
+            // Replace with confirm/cancel buttons (preserving color and input)
+            targetItem.innerHTML = `
+                <div class="sector-color-strip" style="background:${bgColor}"></div>
+                <input class="sector-edit-input" type="text" value="${sectorValue}" data-index="${index}" readonly style="background: rgba(255,255,255,0.1); color: #fff;">
+                <div style="flex:1"></div>
+                <div class="confirm-delete">
+                    <button class="confirm-btn" onclick="playClick(); confirmDelete(${index})">✓</button>
+                    <button class="cancel-btn" onclick="playClick(); cancelDelete(${index})">✕</button>
+                </div>
+            `;
+        }
+    }
+}
+
+function confirmDelete(index){
+    if(spinning || blinking) return;
+    
+    if(index >= 0 && index < sectors.length){
+        sectors.splice(index, 1);
+        updateSectorList();
+        draw();
+    }
+}
+
+function cancelDelete(index){
+    // Just refresh the list to restore original state
+    updateSectorList();
+}
+
+// Handle sector text editing
+function updateSectorText(inputElement){
+    const index = parseInt(inputElement.dataset.index);
+    const newText = inputElement.value.trim();
+    
+    if(newText && index >= 0 && index < sectors.length){
+        sectors[index] = newText;
+        draw(); // Update the wheel visualization
+    } else if(!newText){
+        // If text is empty, revert to original value
+        inputElement.value = sectors[index];
+    }
+}
+
+function handleSectorKeyPress(event, inputElement){
+    if(event.key === 'Enter'){
+        inputElement.blur(); // Trigger the blur event to save changes
+    } else if(event.key === 'Escape'){
+        // Revert to original value and blur
+        const index = parseInt(inputElement.dataset.index);
+        inputElement.value = sectors[index];
+        inputElement.blur();
+    }
+}
+
+// Update sector list when adding sectors
+const originalAddSector = addSector;
+addSector = function(){
+    originalAddSector();
+    updateSectorList();
+};
+</script>
+
+<script>
+// Register service worker for PWA functionality
+if('serviceWorker' in navigator){
+    window.addEventListener('load', () => {
+        navigator.serviceWorker.register('/sw.js')
+            .then(registration => {
+                console.log('SW registered: ', registration);
+            })
+            .catch(registrationError => {
+                console.log('SW registration failed: ', registrationError);
+            });
+    });
+}
+</script>
+</body>
+</html>
