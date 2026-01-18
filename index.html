@@ -1,19 +1,8 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-<!-- Early Service Worker registration -->
-<script>
-// Register service worker as early as possible
-if ('serviceWorker' in navigator) {
-  navigator.serviceWorker.register('/sw.js')
-    .catch(error => console.log('Early SW registration failed:', error));
-}
-</script>
-
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<link rel="manifest" href="/manifest.json">
-<meta name="theme-color" content="#ffd66b">
 <title>Решатель</title>
 
 <style>
@@ -2037,75 +2026,5 @@ addSector = function(){
     updateSectorList();
 };
 </script>
-<!-- Service Worker Registration -->
-<script>
-// Register service worker for offline functionality
-if ('serviceWorker' in navigator) {
-    window.addEventListener('load', () => {
-        navigator.serviceWorker.register('/sw.js')
-            .then((registration) => {
-                console.log('✅ Service Worker registered with scope:', registration.scope);
-                
-                // Check for updates
-                registration.addEventListener('updatefound', () => {
-                    const newWorker = registration.installing;
-                    newWorker.addEventListener('statechange', () => {
-                        if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
-                            // New update available
-                            console.log('📥 New content is available; please refresh.');
-                            // Optionally show update notification
-                            showToast('🔄 Доступно обновление. Перезагрузите страницу.', 'success');
-                        }
-                    });
-                });
-                
-                // Сообщаем пользователю о готовности офлайн режима
-                if (navigator.onLine) {
-                    showToast('✅ Приложение готово к работе офлайн', 'success');
-                }
-            })
-            .catch((error) => {
-                console.log('❌ Service Worker registration failed:', error);
-                // Fallback для старых браузеров
-                console.log('ℹ️ Service Worker not supported, app will work online only');
-            });
-    });
-    
-    // Listen for messages from service worker
-    navigator.serviceWorker.addEventListener('message', (event) => {
-        if (event.data && event.data.type === 'UPDATE_AVAILABLE') {
-            console.log('New update available');
-        }
-    });
-} else {
-    console.log('ℹ️ Service Worker not supported in this browser');
-}
-
-// Offline status indicator
-window.addEventListener('online', () => {
-    showToast('🌐 Онлайн режим активен', 'success');
-});
-
-window.addEventListener('offline', () => {
-    showToast('📴 Работа в офлайн режиме. Все функции доступны!', 'success');
-});
-
-// Проверка поддержки основных функций
-window.addEventListener('DOMContentLoaded', () => {
-    // Проверяем localStorage
-    try {
-        localStorage.setItem('test', 'test');
-        localStorage.removeItem('test');
-    } catch (e) {
-        showToast('⚠️ localStorage недоступен. Настройки не будут сохраняться.', 'error');
-    }
-    
-    // Проверяем Audio API
-    if (typeof Audio === 'undefined') {
-        showToast('⚠️ Audio API недоступен. Звуки отключены.', 'error');
-    }
-});
-</script>
-
 </body>
 </html>
