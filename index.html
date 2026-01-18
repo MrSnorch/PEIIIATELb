@@ -133,56 +133,277 @@ button:active{transform:translateY(1px)}
 
 /* LOGS */
 .log{
-    margin-top:10px;
-    min-height:26px;
+    margin-top:6px;
+    min-height:30px; /* Ensure space for copy message */
     font-size:14px;
     opacity:0;
     transform:translateY(10px);
     transition:.3s;
+    height:auto; /* Allow content to determine height while maintaining min-height */
+}
+
+.wheel-section-bottom{
+    margin-top:8px;
+    min-height:80px; /* Reserve space for log message + history */
+    position:relative;
+}
+
+.wheel-section-bottom .log{
+    position:absolute;
+    top:0;
+    left:0;
+    right:0;
+    min-height:30px;
+    margin-top:0;
 }
 #wheelLog:empty{
     margin-top:0;
-    min-height:0;
+    min-height:30px; /* Maintain space even when empty */
 }
 .log.show{opacity:1;transform:translateY(0)}
 .movie{color:#ffd66b;font-weight:600}
 
 /* HISTORY */
-.history{
+.history-container{
     margin-top:12px;
     background:rgba(255,255,255,.04);
     border-radius:14px;
     padding:10px;
-    max-height:140px;
-    overflow:auto;
-    font-size:14px
+    height:145px;
+    font-size:14px;
+    display:flex;
+    flex-direction:column;
+    position:relative;
 }
-.history-title{text-align:center;font-weight:600;margin-bottom:4px}
-.history ul{list-style:none;padding:0;margin:0;text-align:left}
-.history li{margin-bottom:4px}
+
+/* Custom scrollbar for history */
+.history-scroll-wrapper::-webkit-scrollbar {
+    width: 12px;
+}
+
+.history-scroll-wrapper::-webkit-scrollbar-track {
+    background: rgba(0,0,0,.2);
+    border-radius: 8px;
+    margin: 4px 10px 4px 0;
+}
+
+.history-scroll-wrapper::-webkit-scrollbar-thumb {
+    background: #393b46;
+    border-radius: 0 8px 8px 0;
+    border: 2px solid transparent;
+    background-clip: padding-box;
+    box-shadow: inset 0 0 0 2px rgba(0,0,0,.3);
+}
+
+.history-scroll-wrapper::-webkit-scrollbar-thumb:hover {
+    background: #4a4c5a;
+    border-radius: 0 8px 8px 0;
+    box-shadow: inset 0 0 0 2px rgba(0,0,0,.4);
+}
+
+.history-scroll-wrapper::-webkit-scrollbar-thumb:active {
+    background: #2a2c35;
+    border-radius: 0 8px 8px 0;
+}
+
+/* Firefox scrollbar */
+.history-scroll-wrapper {
+    scrollbar-width: thin;
+    scrollbar-color: #393b46 rgba(0,0,0,.2);
+}
+.history-divider{
+    height:1px;
+    background:rgba(255,255,255,.1);
+    margin:12px 0 4px 0;
+    flex-shrink:0;
+    display:block; /* Always visible */
+}
+
+.history-scroll-wrapper{
+    flex:1;
+    overflow-y:auto;
+    margin-top:4px;
+}
+
+.history-header{
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    margin-bottom:1px;
+    position:relative;
+    flex-shrink:0;
+}
+
+.history-title{
+    text-align:center;
+    flex:1;
+}
+
+.history-copy-btn{
+    position:absolute;
+    top:-8px;
+    left:0px;
+    width:auto!important;
+    padding:4px 6px;
+    font-size:13px;
+    border-radius:8px;
+    background:rgba(255,255,255,.12);
+    color:#fff;
+    cursor:pointer;
+    z-index:10;
+    border:none;
+    display:block; /* Visible by default */
+    transition:all .2s ease;
+}
+
+.history-clear-btn{
+    position:absolute;
+    top:-8px;
+    right:0px;
+    width:auto!important;
+    padding:4px 6px;
+    font-size:13px;
+    border-radius:8px;
+    background:rgba(255,255,255,.12);
+    color:#fff;
+    cursor:pointer;
+    z-index:10;
+    border:none;
+    display:block;
+    transition:all .2s ease;
+}
+
+.history-copy-btn:hover{
+    background:rgba(255,255,255,.2);
+    transform:scale(1.05);
+}
+
+.history-clear-btn:hover{
+    background:rgba(255,255,255,.2);
+    transform:scale(1.05);
+}
+
+/* Toast Notification */
+.toast-notification{
+    position:fixed;
+    top:20px;
+    right:20px;
+    background:rgba(0,0,0,.85);
+    backdrop-filter:blur(10px);
+    border-radius:12px;
+    padding:16px;
+    z-index:1000;
+    box-shadow:0 6px 16px rgba(0,0,0,.45);
+    transform:translateX(120%);
+    transition:transform 0.3s ease-out;
+    min-width:200px;
+    text-align:center;
+}
+
+.toast-notification.show{
+    transform:translateX(0);
+}
+
+.toast-notification.success{
+    border-left:4px solid #4caf50;
+}
+
+.toast-notification.error{
+    border-left:4px solid #f44336;
+}
+
+.toast-message{
+    color:#fff;
+    font-size:14px;
+    margin:0;
+}
+.history-scroll-wrapper ul{list-style:none;padding:0;margin:0;text-align:left}
+.history-scroll-wrapper li{margin-bottom:4px}
+
+.sector-actions{
+    position:relative;
+    margin:8px 0;
+}
+
+.sector-actions input{
+    width:100%;
+    margin:0;
+    padding-right:36px; /* Space for the button */
+}
+
+.sector-actions .history-copy-btn{
+    flex-shrink:0;
+}
+
+.sector-add-btn{
+    position:absolute;
+    right:5px;
+    top:-3px;
+    transform:none;
+    width:auto!important;
+    padding:4px 6px;
+    font-size:13px;
+    border-radius:8px;
+    background:rgba(255,255,255,.12);
+    color:#fff;
+    cursor:pointer;
+    border:none;
+    z-index:2;
+}
+
+.sector-add-btn:hover{
+    background:rgba(255,255,255,.2);
+    transform:scale(1.05)!important;
+    top:-3px!important;
+}
+
+.wheel-copy-btn{
+    position:absolute;
+    top:120px;
+    left:130px;
+    transform:translate(-50%, -50%);
+    width:48px;
+    height:48px;
+    border-radius:50%;
+    background:rgba(255,255,255,.12);
+    color:#fff;
+    cursor:pointer;
+    z-index:10;
+    border:none;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-size:20px;
+    padding:0;
+}
+
+.wheel-copy-btn:hover{
+    transform:translate(-50%, -50%)!important;
+}
+
+
+
+.wheel-wrap{
+    position:relative;
+    display:inline-block;
+}
+
+.wheel-copy-btn:hover{
+    background:rgba(255,255,255,.2);
+    transform:scale(1.05);
+}
+
+.card.full{
+    position:relative;
+}
 
 /* LINKS */
 .history a,
-#lastResult a{
-    color:#7cc7ff;
-    text-decoration:none;
-}
-.history a:hover,
-#lastResult a:hover{
+.history a:hover{
     text-decoration:underline;
 }
 
-/* RESULT */
-#lastResult{
-    text-align:left;
-    font-weight:600;
-    color:#fff;
-    padding-bottom:6px;
-    margin-bottom:8px;
-    border-bottom:1px solid rgba(255,255,255,.15);
-}
-#lastResult span{color:#ffd66b}
-#lastResult:has(span:empty){display:none}
+
 
 /* INPUT */
 input{
@@ -227,28 +448,31 @@ canvas{
 .btn-row button{
     flex:1;
 }
-/* 🔊 Переключатель звука — левый верх колеса */
-.wheel-sound{
+/* 🔊 Переключатель звука — левый верх */
+.wheel-sound-btn{
     position:absolute;
-    top:12px;
-    left:12px;
-    font-size:20px;
+    top:2px;
+    left:10px;
+    width:auto!important;
+    padding:4px 6px;
+    font-size:13px;
+    border-radius:8px;
+    background:rgba(255,255,255,.12);
+    color:#fff;
     cursor:pointer;
-    opacity:.6;
     z-index:10;
-    user-select:none;
 }
 
-.wheel-sound:hover{
-    opacity:1;
-    transform:scale(1.1);
+.wheel-sound-btn:hover{
+    background:rgba(255,255,255,.2);
+    transform:scale(1.05);
 }
 
 /* ⚙️ Настройки колеса — правый верх */
 .wheel-settings-btn{
     position:absolute;
-    top:12px;
-    right:12px;
+    top:2px;
+    right:10px;
     width:auto!important;
     padding:4px 6px;
     font-size:13px;
@@ -257,13 +481,14 @@ canvas{
     color:#fff;
     cursor:pointer;
     z-index:10;
+    transition:all .2s ease;
 }
 
 /* ⚙️ Настройки монетки и кубика */
 .coin-settings-btn, .dice-settings-btn{
     position:absolute;
-    top:8px;
-    right:8px;
+    top:2px;
+    right:10px;
     width:auto!important;
     padding:4px 6px;
     font-size:13px;
@@ -272,6 +497,25 @@ canvas{
     color:#fff;
     cursor:pointer;
     z-index:10;
+    transition:all .2s ease;
+}
+
+.coin-settings-btn:hover, .dice-settings-btn:hover, .wheel-settings-btn:hover{
+    background:rgba(255,255,255,.2);
+    transform:scale(1.05);
+}
+
+.coin-settings-btn.active, .dice-settings-btn.active, .wheel-settings-btn.active{
+    background:rgba(255,255,255,.2);
+    box-shadow:0 0 8px rgba(255,255,255,.3);
+    border:1px solid rgba(255,255,255,.2);
+}
+
+/* Special positioning for coin settings - left side */
+.coin-settings-btn{
+    top:2px;
+    left:10px;
+    right:auto;
 }
 
 .coin-settings, .dice-settings{
@@ -351,6 +595,42 @@ canvas{
     background:rgba(255,255,255,.04);
     border-radius:8px;
     padding:4px;
+}
+
+/* Custom scrollbar styling */
+.sector-list::-webkit-scrollbar {
+    width: 12px;
+}
+
+.sector-list::-webkit-scrollbar-track {
+    background: rgba(0,0,0,.2);
+    border-radius: 8px;
+    margin: 4px 0;
+}
+
+.sector-list::-webkit-scrollbar-thumb {
+    background: linear-gradient(180deg, #ffd66b, #e6c150, #ffd66b);
+    border-radius: 0 8px 8px 0;
+    border: 2px solid transparent;
+    background-clip: padding-box;
+    box-shadow: inset 0 0 0 2px rgba(255,255,255,.1);
+}
+
+.sector-list::-webkit-scrollbar-thumb:hover {
+    background: linear-gradient(180deg, #ffdf85, #ffd66b, #ffdf85);
+    border-radius: 0 8px 8px 0;
+    box-shadow: inset 0 0 0 2px rgba(255,255,255,.2);
+}
+
+.sector-list::-webkit-scrollbar-thumb:active {
+    background: linear-gradient(180deg, #e6c150, #d4af37, #e6c150);
+    border-radius: 0 8px 8px 0;
+}
+
+/* Firefox scrollbar */
+.sector-list {
+    scrollbar-width: thin;
+    scrollbar-color: #ffd66b rgba(255,255,255,.05);
 }
 
 
@@ -486,6 +766,14 @@ canvas{
     height:22px;
 }
 
+.confirm-clear-history{
+    position:absolute;
+    top:-8px;
+    right:0px;
+    display:flex;
+    gap:4px;
+}
+
 .empty-message{
     text-align:center;
     color:#aaa;
@@ -507,12 +795,20 @@ canvas{
     <div class="settings-header">🪙 Настройки монетки</div>
     <div class="settings-form">
         <div>
-            <label class="settings-label">Орёл</label>
-            <input class="settings-input" id="eagleText" value="КИНО">
+            <label class="settings-label">Аверс</label>
+            <input class="settings-input" id="eagleText" value="ФИЛЬМ">
         </div>
         <div>
-            <label class="settings-label">Решка</label>
+            <label class="settings-label">Реверс</label>
             <input class="settings-input" id="tailsText" value="СЕРИАЛ">
+        </div>
+        <div>
+            <label class="settings-label">Гурт</label>
+            <input class="settings-input" id="edgeText" value="АНИМЕ">
+        </div>
+        <div>
+            <label class="settings-label">Шанс Гурта (%)</label>
+            <input class="settings-input" id="edgeChance" type="number" min="0" max="100" value="1">
         </div>
     </div>
 </div>
@@ -546,10 +842,10 @@ canvas{
 <div class="arrow"></div>
 
 <!-- Переключатель звука -->
-<div class="wheel-sound" id="soundToggle" onclick="toggleSound()">🔊</div>
+<button class="wheel-sound-btn" id="soundToggle" onclick="toggleSound()">🔊</button>
 
 <!-- Настройки колеса -->
-<button class="wheel-settings-btn" onclick="toggle('wheelSettings')">⚙️</button>
+<button class="wheel-settings-btn" onclick="toggle('wheelSettings')">🗑️</button>
 <div class="wheel-settings" id="wheelSettings">
     <h3>🗑️ Удалить секторы</h3>
     <div class="sector-list" id="sectorList">
@@ -559,25 +855,31 @@ canvas{
 
 <div class="wheel-wrap">
 <canvas id="wheel" width="260" height="260"></canvas>
+<button class="wheel-copy-btn" onclick="copySectors()">📋</button>
 </div>
 
-<input id="sectorInput" placeholder="Текст сектора">
-
-<div class="btn-row">
-<button onclick="addSector()">ДОБАВИТЬ</button>
-<button onclick="resetWheel()">СБРОС</button>
+<div class="sector-actions">
+    <input id="sectorInput" placeholder="Текст сектора">
+    <button class="sector-add-btn" onclick="addSector()">➕</button>
 </div>
 
 <button onclick="spinWheel()">КРУТИТЬ</button>
 
-<div class="log" id="wheelLog"></div>
-
-<div class="history">
-<div class="history-title">📜 История</div>
-<div id="lastResult">Выпало: <span></span></div>
-<ul id="wheelHistory"></ul>
+<div class="wheel-section-bottom">
+    <div class="log" id="wheelLog"></div>
+    <div class="history-container">
+<div class="history-header">
+    <button class="history-clear-btn" onclick="clearHistory()">🗑️</button>
+    <div class="history-title">📜 История</div>
+    <button class="history-copy-btn" onclick="copyHistory()">📋</button>
+</div>
+<div class="history-divider"></div>
+<div class="history-scroll-wrapper">
+    <ul id="wheelHistory"></ul>
+</div>
 </div>
 
+</div>
 </div>
 </div>
 </div>
@@ -588,11 +890,45 @@ canvas{
 <audio id="sndWheel" src="sounds/wheel.mp3" preload="auto"></audio>
 <audio id="sndBell"  src="sounds/bell.mp3" preload="auto"></audio>
 
+<!-- Toast Notification -->
+<div class="toast-notification" id="toastNotification">
+    <p class="toast-message" id="toastMessage"></p>
+</div>
+
 <script>
 /* helpers */
 function toggle(id){
     const e=document.getElementById(id);
-    e.style.display=e.style.display==='block'?'none':'block';
+    const isVisible = e.style.display === 'block';
+    e.style.display = isVisible ? 'none' : 'block';
+    
+    // Update button active state
+    const buttonMap = {
+        'coinSettings': 'coin-settings-btn',
+        'diceSettings': 'dice-settings-btn',
+        'wheelSettings': 'wheel-settings-btn'
+    };
+    
+    if(buttonMap[id]){
+        const button = document.querySelector('.' + buttonMap[id]);
+        if(button){
+            if(isVisible){
+                button.classList.remove('active');
+            } else {
+                button.classList.add('active');
+            }
+        }
+    }
+    
+    // Remove active state from other settings buttons
+    Object.keys(buttonMap).forEach(key => {
+        if(key !== id){
+            const otherButton = document.querySelector('.' + buttonMap[key]);
+            if(otherButton){
+                otherButton.classList.remove('active');
+            }
+        }
+    });
 }
 function showLog(id,html){
     const el=document.getElementById(id);
@@ -633,9 +969,17 @@ function coinFlip(){
     setTimeout(()=>{
         showLog(
             'coinLog',
-            Math.random()<.5
-            ?`Орёл → <span class="movie">${eagleText.value}</span>`
-            :`Решка → <span class="movie">${tailsText.value}</span>`
+`Результат: <span class="movie">${(() => {
+            // Check for edge landing with configurable chance
+            const edgeChanceValue = parseFloat(edgeChance.value) || 5;
+            const isEdge = Math.random() * 100 < edgeChanceValue;
+            
+            if(isEdge){
+                return edgeText.value;
+            } else {
+                return Math.random() < 0.5 ? eagleText.value : tailsText.value;
+            }
+        })()}</span>`
         );
     },1100);
 }
@@ -648,7 +992,7 @@ function rollDice(){
     const min=+diceMin.value,max=+diceMax.value;
     const n=Math.floor(Math.random()*(max-min+1))+min;
     setTimeout(()=>{
-        showLog('diceLog',`Выпало: <span class="movie">${n}</span>`);
+        showLog('diceLog',`Результат: <span class="movie">${n}</span>`);
     },1100);
 }
 
@@ -677,11 +1021,19 @@ function draw(){
             ctx.closePath();
 
             if(i===highlightIndex){
+                // Create a ring-shaped path for blinking (exclude center)
+                ctx.save();
+                ctx.beginPath();
+                ctx.arc(cx,cy,r,start,start+step);
+                ctx.arc(cx,cy,14,start+step,start,true);
+                ctx.closePath();
                 ctx.fillStyle=`hsla(${i*360/sectors.length},90%,65%,${0.5+0.5*Math.sin(blinkPhase)})`;
+                ctx.fill();
+                ctx.restore();
             }else{
                 ctx.fillStyle=`hsl(${i*360/sectors.length},70%,45%)`;
+                ctx.fill();
             }
-            ctx.fill();
 
             ctx.save();
             ctx.translate(cx,cy);
@@ -705,12 +1057,12 @@ function draw(){
     ctx.save();
     ctx.globalCompositeOperation='destination-out';
     ctx.beginPath();
-    ctx.arc(cx,cy,14,0,Math.PI*2);
+    ctx.arc(cx,cy,24,0,Math.PI*2);
     ctx.fill();
     ctx.restore();
-
+    
     ctx.beginPath();
-    ctx.arc(cx,cy,14,0,Math.PI*2);
+    ctx.arc(cx,cy,24,0,Math.PI*2);
     ctx.strokeStyle="#ffd66b";
     ctx.lineWidth=2;
     ctx.stroke();
@@ -746,7 +1098,6 @@ function spinWheel(){
             spinning=false;
 
             const result=sectors[idx];
-            lastResult.innerHTML=`Выпало: <span>${isURL(result)?formatLink(result):result}</span>`;
             history.push(result);
             updateHistory();
 
@@ -766,6 +1117,7 @@ function spinWheel(){
                 highlightIndex=null;
                 blinking=false;
                 sectors.splice(idx,1);
+                updateSectorList(); // Update settings panel
                 draw();
             },3000);
         }
@@ -780,6 +1132,9 @@ function updateHistory(){
         li.innerHTML=`${i+1}. `+(isURL(h)?formatLink(h):h);
         wheelHistory.appendChild(li);
     });
+    
+    // Update copy button visibility
+    updateHistoryCopyButton();
 }
 
 /* SECTORS */
@@ -792,10 +1147,105 @@ function addSector(){
 function resetWheel(){
     if(spinning||blinking)return;
     sectors=[];history=[];
-    lastResult.innerHTML='Выпало: <span></span>';
     updateHistory();
     updateSectorList();
     draw();
+}
+
+function copySectors(){
+    if(sectors.length === 0){
+        showToast('Нет секторов для копирования', 'error');
+        return;
+    }
+    
+    const text = sectors.join('\n');
+    navigator.clipboard.writeText(text).then(() => {
+        showToast('📋 Сектора скопированы в буфер обмена', 'success');
+    }).catch(err => {
+        showToast('❌ Ошибка копирования', 'error');
+        console.error('Failed to copy: ', err);
+    });
+}
+
+function updateHistoryCopyButton(){
+    const copyBtn = document.querySelector('.history-copy-btn');
+    if(copyBtn){
+        copyBtn.style.display = 'block';
+    }
+}
+
+function showToast(message, type = 'success'){
+    const toast = document.getElementById('toastNotification');
+    const toastMessage = document.getElementById('toastMessage');
+    
+    toastMessage.textContent = message;
+    toast.className = `toast-notification ${type}`;
+    
+    // Show toast
+    toast.classList.add('show');
+    
+    // Auto-hide after 3 seconds
+    setTimeout(() => {
+        toast.classList.remove('show');
+    }, 3000);
+}
+
+function copyHistory(){
+    if(history.length === 0){
+        showToast('История пуста', 'error');
+        return;
+    }
+    
+    // Format history as numbered list
+    const text = history.map((item, index) => `${index + 1}. ${item}`).join('\n');
+    navigator.clipboard.writeText(text).then(() => {
+        showToast('📋 История скопирована в буфер обмена', 'success');
+    }).catch(err => {
+        showLog('wheelLog', '❌ Ошибка копирования истории');
+        console.error('Failed to copy history: ', err);
+    });
+}
+
+function clearHistory(){
+    if(history.length === 0){
+        showToast('История уже пуста', 'error');
+        return;
+    }
+    
+    // Show confirmation UI
+    const clearBtn = document.querySelector('.history-clear-btn');
+    if(clearBtn){
+        // Replace with confirm/cancel buttons
+        clearBtn.outerHTML = `
+            <div class="confirm-clear-history">
+                <button class="confirm-btn" onclick="confirmClearHistory()">✓</button>
+                <button class="cancel-btn" onclick="cancelClearHistory()">✕</button>
+            </div>
+        `;
+    }
+}
+
+function confirmClearHistory(){
+    history = [];
+    updateHistory();
+    showToast('🗑️ История очищена', 'success');
+    // Restore the clear button
+    restoreClearButton();
+}
+
+function cancelClearHistory(){
+    // Restore the clear button
+    restoreClearButton();
+}
+
+function restoreClearButton(){
+    const header = document.querySelector('.history-header');
+    if(header){
+        const confirmDiv = header.querySelector('.confirm-clear-history');
+        if(confirmDiv){
+            confirmDiv.outerHTML = '<button class="history-clear-btn" onclick="clearHistory()">🗑️</button>';
+        }
+    }
 }
 
 /* WHEEL SETTINGS */
