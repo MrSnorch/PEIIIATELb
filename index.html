@@ -118,13 +118,13 @@ button:active{transform:translateY(1px)}
 .settings label{display:block;margin-bottom:6px}
 
 /* ANIMATIONS */
-.coin.toss{animation:coinToss 1.4s ease-out}
+.coin.toss{animation:coinToss 1.2s ease-out}
 @keyframes coinToss{
     0%{transform:translateY(0) rotateX(0deg) scale(1); filter:brightness(1) drop-shadow(0 0 0 rgba(255,214,107,0))}
     50%{transform:translateY(-40px) rotateX(720deg) scale(1.15); filter:brightness(1.3) drop-shadow(0 0 20px rgba(255,214,107,0.4))}
     100%{transform:translateY(0) rotateX(1080deg) scale(1); filter:brightness(1) drop-shadow(0 0 0 rgba(255,214,107,0))}
 }
-.dice.roll{animation:diceToss 1.5s ease-out}
+.dice.roll{animation:diceToss 1.6s ease-out}
 @keyframes diceToss{
     0%{transform:translateY(0) rotate(0deg) scale(1); filter:brightness(1) drop-shadow(0 0 0 rgba(255,255,255,0))}
     50%{transform:translateY(-45px) rotate(1080deg) scale(1.2); filter:brightness(1.3) drop-shadow(0 0 20px rgba(255,255,255,0.4))}
@@ -1355,11 +1355,22 @@ function toggle(id){
     });
 }
 function showLog(id,html){
-    const el=document.getElementById(id);
+    const el = document.getElementById(id);
+    
+    // Double reflow technique - most reliable way to restart CSS animations
     el.classList.remove('show');
-    el.innerHTML=html;
-    void el.offsetWidth;
-    el.classList.add('show');
+    
+    // Force browser to process class removal
+    el.offsetHeight; // First reflow
+    
+    // Update content
+    el.innerHTML = html;
+    
+    // Second reflow to ensure clean state
+    requestAnimationFrame(() => {
+        el.offsetHeight; // Second reflow
+        el.classList.add('show');
+    });
 }
 function isURL(text){return /^(https?:\/\/)/i.test(text)}
 function formatLink(text){
@@ -1472,7 +1483,7 @@ function playClickAlways(){
 
 /* COIN */
 function coinFlip(){
-    coinLog.innerHTML='';
+    document.getElementById('coinLog').classList.remove('show');
     coin.classList.remove('toss');void coin.offsetWidth;coin.classList.add('toss');
     play(sndCoin);
     setTimeout(()=>{
@@ -1490,19 +1501,19 @@ function coinFlip(){
             }
         })()}</span>`
         );
-    },1100);
+    },900);
 }
 
 /* DICE */
 function rollDice(){
-    diceLog.innerHTML='';
+    document.getElementById('diceLog').classList.remove('show');
     dice.classList.remove('roll');void dice.offsetWidth;dice.classList.add('roll');
     play(sndDice);
     const min=+diceMin.value,max=+diceMax.value;
     const n=Math.floor(Math.random()*(max-min+1))+min;
     setTimeout(()=>{
         showLog('diceLog',`Результат: <span class="movie">${n}</span>`);
-    },1100);
+    },1300);
 }
 
 /* WHEEL */
