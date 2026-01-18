@@ -1844,23 +1844,62 @@ function updateHistoryCopyButton(){
     }
 }
 
+// Toast notification queue system
+let toastQueue = [];
+let isToastProcessing = false;
+
 function showToast(message, type = 'success'){
+    // Add to queue
+    toastQueue.push({ message, type });
+    
+    // Start processing if not already
+    if (!isToastProcessing) {
+        processToastQueue();
+    }
+}
+
+function processToastQueue() {
+    if (toastQueue.length === 0) {
+        isToastProcessing = false;
+        return;
+    }
+    
+    isToastProcessing = true;
+    const toastItem = toastQueue.shift();
+    
     const toast = document.getElementById('toastNotification');
     const toastMessage = document.getElementById('toastMessage');
     
-    // Clear any existing timeout
-    if(window.toastTimeout){
-        clearTimeout(window.toastTimeout);
+    if (toast && toastMessage) {
+        // Clear any existing timeout
+        if (window.toastTimeout) {
+            clearTimeout(window.toastTimeout);
+        }
+        
+        // Hide current notification if showing
+        if (toast.classList.contains('show')) {
+            toast.classList.remove('show');
+            // Wait for hide animation to complete before showing new
+            setTimeout(() => {
+                showQueuedToast(toast, toastMessage, toastItem);
+            }, 300);
+        } else {
+            // Show immediately if not currently showing
+            showQueuedToast(toast, toastMessage, toastItem);
+        }
+    } else {
+        // Element not found, continue processing queue
+        isToastProcessing = false;
+        processToastQueue();
     }
-    
-    // Hide existing notification immediately
-    toast.classList.remove('show');
-    
+}
+
+function showQueuedToast(toast, toastMessage, toastItem) {
     // Set new content and type
-    toastMessage.textContent = message;
-    toast.className = `toast-notification ${type}`;
+    toastMessage.textContent = toastItem.message;
+    toast.className = `toast-notification ${toastItem.type}`;
     
-    // Force reflow to ensure immediate hiding
+    // Force reflow
     void toast.offsetWidth;
     
     // Show new toast
@@ -1870,6 +1909,12 @@ function showToast(message, type = 'success'){
     window.toastTimeout = setTimeout(() => {
         toast.classList.remove('show');
         window.toastTimeout = null;
+        
+        // Continue processing queue after hide animation
+        setTimeout(() => {
+            isToastProcessing = false;
+            processToastQueue();
+        }, 300);
     }, 3000);
 }
 
@@ -2069,7 +2114,7 @@ window.addEventListener('DOMContentLoaded', async () => {
     // Initialize Telegram Web App and wait for greeting
     await initTelegramWebApp();
     
-    // Load saved settings after greeting
+    // Load saved settings immediately (don't wait)
     const hasSavedData = loadSettings();
     
     // Draw wheel with loaded sectors
@@ -2090,11 +2135,17 @@ window.addEventListener('DOMContentLoaded', async () => {
         }
     }, 1000);
     
-    // Show notification if settings were loaded (after greeting)
-    if (hasSavedData) {
+    // Show notification if settings were loaded (after greeting completes)
+    if (hasSavedData && isTelegramUser()) {
+        // For Telegram users: show after greeting finishes
         setTimeout(() => {
             showToast('💾 Настройки загружены', 'success');
-        }, 1000); // Increased delay to ensure greeting finished
+        }, 3500); // Wait for greeting (3s) + small buffer
+    } else if (hasSavedData) {
+        // For regular users: show immediately
+        setTimeout(() => {
+            showToast('💾 Настройки загружены', 'success');
+        }, 500);
     }
 });
 
