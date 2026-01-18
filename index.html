@@ -982,6 +982,22 @@ function loadSettings(showNotification = false) {
         
         const settings = JSON.parse(saved);
         
+        // Check if there are actual changes from defaults
+        const hasMeaningfulData = 
+            (Array.isArray(settings.sectors) && settings.sectors.length > 0) ||
+            (Array.isArray(settings.history) && settings.history.length > 0) ||
+            (settings.coin && (
+                settings.coin.eagleText !== 'ФИЛЬМ' ||
+                settings.coin.tailsText !== 'СЕРИАЛ' ||
+                settings.coin.edgeText !== 'АНИМЕ' ||
+                settings.coin.edgeChance !== '1'
+            )) ||
+            (settings.dice && (
+                settings.dice.min !== '1' ||
+                settings.dice.max !== '3'
+            )) ||
+            (typeof settings.soundEnabled !== 'undefined' && settings.soundEnabled !== true);
+        
         // Restore sound setting
         if (typeof settings.soundEnabled !== 'undefined') {
             soundEnabled = settings.soundEnabled;
@@ -1026,10 +1042,21 @@ function loadSettings(showNotification = false) {
         
         console.log('✅ Settings loaded from localStorage');
         
-        // Show notification only if requested
-        if (showNotification) {
-            const itemCount = (sectors.length + history.length);
-            showToast(`💾 Загружено: ${itemCount} элементов`, 'success');
+        // Show notification only if:
+        // 1. Requested AND
+        // 2. There are actual changes from defaults
+        if (showNotification && hasMeaningfulData) {
+            const changes = [];
+            
+            if (sectors.length > 0) changes.push(`${sectors.length} секторов`);
+            if (history.length > 0) changes.push(`${history.length} записей истории`);
+            if (settings.coin && settings.coin.eagleText !== 'ФИЛЬМ') changes.push('настройки монетки');
+            if (settings.dice && (settings.dice.min !== '1' || settings.dice.max !== '3')) changes.push('настройки кубика');
+            if (typeof settings.soundEnabled !== 'undefined' && !settings.soundEnabled) changes.push('звук выкл');
+            
+            showToast(`💾 Восстановлено: ${changes.join(', ')}`, 'success');
+        } else if (showNotification && !hasMeaningfulData) {
+            console.log('ℹ️ Загружены стандартные настройки (нет изменений)');
         }
         
         return true;
@@ -1073,6 +1100,31 @@ function checkSettings() {
     const hasSettings = loadSettings(true);
     console.log('Settings check result:', hasSettings);
     return hasSettings;
+}
+
+// Check what's currently saved
+function inspectSettings() {
+    const saved = localStorage.getItem(STORAGE_KEY);
+    if (!saved) {
+        console.log('ℹ️ Нет сохраненных настроек');
+        return null;
+    }
+    
+    try {
+        const settings = JSON.parse(saved);
+        console.table({
+            'Сектора': settings.sectors?.length || 0,
+            'История': settings.history?.length || 0,
+            'Звук': settings.soundEnabled ?? 'по умолчанию (вкл)',
+            'Монетка': settings.coin ? 'изменена' : 'по умолчанию',
+            'Кубик': settings.dice ? 'изменен' : 'по умолчанию'
+        });
+        
+        return settings;
+    } catch (e) {
+        console.error('Ошибка чтения настроек:', e);
+        return null;
+    }
 }
 
 // Clear and reload everything
@@ -1738,8 +1790,8 @@ function testSoundCache(showNotification = false) {
 
 // Initialize on page load
 window.addEventListener('DOMContentLoaded', () => {
-    // Load saved settings silently
-    const hasSavedData = loadSettings(false);
+    // Load saved settings and show notification only if there are changes
+    const hasSavedData = loadSettings(true);
     
     // Draw wheel with loaded sectors
     draw();
@@ -1758,9 +1810,6 @@ window.addEventListener('DOMContentLoaded', () => {
             }, 500);
         }
     }, 1000);
-    
-    // No automatic notification for settings anymore
-    // Settings loading is now silent by default
 });
 
 // Update sector list when adding sectors
