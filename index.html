@@ -1084,14 +1084,76 @@ function formatLink(text){
     return `<a href="${safe}" target="_blank" rel="noopener noreferrer">${safe}</a>`;
 }
 
-/* SOUND */
+/* SOUND CACHE */
 let soundEnabled=true;
-const sndCoin=document.getElementById('sndCoin');
-const sndDice=document.getElementById('sndDice');
-const sndWheel=document.getElementById('sndWheel');
-const sndBell=document.getElementById('sndBell');
-const sndClick=document.getElementById('sndClick');
-[sndCoin,sndDice,sndWheel,sndBell,sndClick].forEach(s=>s.volume=0.6);
+let audioCache = {};
+
+// Preload and cache all sounds
+function preloadSounds() {
+    const soundFiles = [
+        { id: 'sndCoin', src: 'sounds/coin.mp3' },
+        { id: 'sndDice', src: 'sounds/dice.mp3' },
+        { id: 'sndWheel', src: 'sounds/wheel.mp3' },
+        { id: 'sndBell', src: 'sounds/bell.mp3' },
+        { id: 'sndClick', src: 'sounds/click.mp3' }
+    ];
+    
+    soundFiles.forEach(sound => {
+        try {
+            // Try to get from DOM first
+            const element = document.getElementById(sound.id);
+            if (element) {
+                audioCache[sound.id] = element;
+                console.log(`✅ Cached sound: ${sound.id}`);
+            } else {
+                // Fallback: create new Audio element
+                const audio = new Audio(sound.src);
+                audio.preload = 'auto';
+                audio.volume = 0.6;
+                audioCache[sound.id] = audio;
+                console.log(`🔄 Created cached sound: ${sound.id}`);
+            }
+        } catch (error) {
+            console.warn(`⚠️ Failed to cache ${sound.id}:`, error);
+            // Create silent fallback
+            audioCache[sound.id] = { 
+                play: () => {}, 
+                currentTime: 0, 
+                volume: 0.6 
+            };
+        }
+    });
+    
+    console.log('🎵 All sounds preloaded and cached');
+}
+
+// Get cached sound with fallback
+function getCachedSound(id) {
+    return audioCache[id] || { play: () => {}, currentTime: 0, volume: 0.6 };
+}
+
+// Play sound from cache
+function playCached(s) {
+    if (!soundEnabled) return;
+    try {
+        s.currentTime = 0;
+        s.play().catch(e => {
+            console.warn('Sound play failed:', e);
+        });
+    } catch (e) {
+        console.warn('Sound error:', e);
+    }
+}
+
+// Initialize sound cache
+preloadSounds();
+
+// Original sound elements (kept for backward compatibility)
+const sndCoin = getCachedSound('sndCoin');
+const sndDice = getCachedSound('sndDice');
+const sndWheel = getCachedSound('sndWheel');
+const sndBell = getCachedSound('sndBell');
+const sndClick = getCachedSound('sndClick');
 
 function toggleSound(){
     soundEnabled=!soundEnabled;
@@ -1108,21 +1170,21 @@ function toggleSound(){
     }
 }
 function play(s){
-    if(!soundEnabled)return;
-    s.currentTime=0;
-    s.play().catch(()=>{});
+    playCached(s);
 }
 
 function playClick(){
-    if(!soundEnabled)return;
-    sndClick.currentTime=0;
-    sndClick.play().catch(()=>{});
+    playCached(sndClick);
 }
 
 function playClickAlways(){
     // Always play click sound regardless of soundEnabled state
-    sndClick.currentTime=0;
-    sndClick.play().catch(()=>{});
+    try {
+        sndClick.currentTime = 0;
+        sndClick.play().catch(()=>{});
+    } catch(e) {
+        console.warn('Click sound failed:', e);
+    }
 }
 
 /* COIN */
@@ -1595,6 +1657,19 @@ function setupAutoSave() {
     }
 }
 
+// Test sound cache
+function testSoundCache() {
+    console.log('🔍 Testing sound cache:');
+    Object.keys(audioCache).forEach(key => {
+        const sound = audioCache[key];
+        console.log(`${key}:`, {
+            loaded: sound.readyState >= 3,
+            duration: sound.duration || 'unknown',
+            volume: sound.volume
+        });
+    });
+}
+
 // Initialize on page load
 window.addEventListener('DOMContentLoaded', () => {
     // Load saved settings
@@ -1607,12 +1682,21 @@ window.addEventListener('DOMContentLoaded', () => {
     // Setup auto-save listeners
     setupAutoSave();
     
+    // Test sound cache after a small delay
+    setTimeout(testSoundCache, 1000);
+    
     // Show notification if settings were loaded
     if (hasSavedData) {
         setTimeout(() => {
             showToast('💾 Настройки загружены', 'success');
         }, 500);
     }
+    
+    // Show sound cache status
+    setTimeout(() => {
+        const cachedCount = Object.keys(audioCache).length;
+        showToast(`🎵 Загружено звуков: ${cachedCount}/5`, 'success');
+    }, 1500);
 });
 
 // Update sector list when adding sectors
