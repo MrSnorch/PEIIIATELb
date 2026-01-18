@@ -1092,12 +1092,16 @@ function initTelegramWebApp() {
             const userStorageKey = `${STORAGE_KEY}_${telegramUser.id}`;
             window.STORAGE_KEY = userStorageKey;
             
-            // Show welcome message
-            setTimeout(() => {
+            // Show welcome message and wait for it to finish
+            return new Promise((resolve) => {
                 showToast(`👋 Привет, ${telegramUser.first_name}!`, 'success');
-            }, 1000);
+                // Wait for toast to complete (3 seconds)
+                setTimeout(resolve, 3000);
+            });
         }
     }
+    // Return resolved promise for non-Telegram mode
+    return Promise.resolve();
 }
 
 function getTelegramUserId() {
@@ -2061,11 +2065,11 @@ function testSoundCache(showNotification = false) {
 }
 
 // Initialize on page load
-window.addEventListener('DOMContentLoaded', () => {
-    // Initialize Telegram Web App
-    initTelegramWebApp();
+window.addEventListener('DOMContentLoaded', async () => {
+    // Initialize Telegram Web App and wait for greeting
+    await initTelegramWebApp();
     
-    // Load saved settings
+    // Load saved settings after greeting
     const hasSavedData = loadSettings();
     
     // Draw wheel with loaded sectors
@@ -2086,11 +2090,11 @@ window.addEventListener('DOMContentLoaded', () => {
         }
     }, 1000);
     
-    // Show notification if settings were loaded
+    // Show notification if settings were loaded (after greeting)
     if (hasSavedData) {
         setTimeout(() => {
             showToast('💾 Настройки загружены', 'success');
-        }, 500);
+        }, 1000); // Increased delay to ensure greeting finished
     }
 });
 
