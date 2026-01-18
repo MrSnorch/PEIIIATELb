@@ -3,6 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<link rel="manifest" href="/manifest.json">
+<meta name="theme-color" content="#ffd66b">
 <title>Решатель</title>
 
 <style>
@@ -2026,5 +2028,50 @@ addSector = function(){
     updateSectorList();
 };
 </script>
+<!-- Service Worker Registration -->
+<script>
+// Register service worker for offline functionality
+if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+        navigator.serviceWorker.register('/sw.js')
+            .then((registration) => {
+                console.log('✅ Service Worker registered with scope:', registration.scope);
+                
+                // Check for updates
+                registration.addEventListener('updatefound', () => {
+                    const newWorker = registration.installing;
+                    newWorker.addEventListener('statechange', () => {
+                        if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                            // New update available
+                            console.log('📥 New content is available; please refresh.');
+                            // Optionally show update notification
+                            showToast('🔄 Доступно обновление. Перезагрузите страницу.', 'success');
+                        }
+                    });
+                });
+            })
+            .catch((error) => {
+                console.log('❌ Service Worker registration failed:', error);
+            });
+    });
+    
+    // Listen for messages from service worker
+    navigator.serviceWorker.addEventListener('message', (event) => {
+        if (event.data && event.data.type === 'UPDATE_AVAILABLE') {
+            console.log('New update available');
+        }
+    });
+}
+
+// Offline status indicator
+window.addEventListener('online', () => {
+    showToast('🌐 Онлайн режим активен', 'success');
+});
+
+window.addEventListener('offline', () => {
+    showToast('📴 Работа в офлайн режиме', 'error');
+});
+</script>
+
 </body>
 </html>
