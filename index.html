@@ -1481,6 +1481,49 @@ function playClickAlways(){
     }
 }
 
+// Play bell sound with fade-out at the end
+function playBellWithFade() {
+    if (!soundEnabled) return;
+    
+    const bellSound = getCachedSound('sndBell');
+    
+    try {
+        bellSound.currentTime = 0;
+        const playPromise = bellSound.play();
+        
+        if (playPromise !== undefined) {
+            playPromise.then(() => {
+                // Start fade-out 2.7 seconds after start (3s total duration - 0.3s fade)
+                setTimeout(() => {
+                    // Gradually reduce volume over 300ms
+                    const fadeDuration = 300;
+                    const steps = 10;
+                    const stepTime = fadeDuration / steps;
+                    let currentVolume = bellSound.volume;
+                    
+                    for (let i = 0; i <= steps; i++) {
+                        setTimeout(() => {
+                            const progress = i / steps;
+                            bellSound.volume = currentVolume * (1 - progress);
+                            
+                            // Restore original volume after fade
+                            if (i === steps) {
+                                setTimeout(() => {
+                                    bellSound.volume = 0.6; // restore default volume
+                                }, 50);
+                            }
+                        }, i * stepTime);
+                    }
+                }, 2700); // Start fade 2.7 seconds into 3-second sound
+            }).catch(e => {
+                console.warn('Bell sound play failed:', e);
+            });
+        }
+    } catch (e) {
+        console.warn('Bell sound error:', e);
+    }
+}
+
 /* COIN */
 function coinFlip(){
     document.getElementById('coinLog').classList.remove('show');
@@ -1637,7 +1680,7 @@ function spinWheel(){
                 draw();
             },30);
 
-            play(sndBell);
+            playBellWithFade();
 
             setTimeout(()=>{
                 clearInterval(blink);
