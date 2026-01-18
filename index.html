@@ -1091,16 +1091,9 @@ function initTelegramWebApp() {
             // Change storage key to include user ID
             const userStorageKey = `${STORAGE_KEY}_${telegramUser.id}`;
             window.STORAGE_KEY = userStorageKey;
-            
-            // Show welcome message and wait for it to finish
-            return new Promise((resolve) => {
-                showToast(`👋 Привет, ${telegramUser.first_name}!`, 'success');
-                // Wait for toast to complete (3 seconds)
-                setTimeout(resolve, 3000);
-            });
         }
     }
-    // Return resolved promise for non-Telegram mode
+    // Always return resolved promise
     return Promise.resolve();
 }
 
@@ -2111,18 +2104,25 @@ function testSoundCache(showNotification = false) {
 
 // Initialize on page load
 window.addEventListener('DOMContentLoaded', async () => {
-    // Load saved settings first
+    // Initialize Telegram Web App first to get user ID for storage key
+    await initTelegramWebApp();
+    
+    // Load saved settings with correct user-specific key
     const hasSavedData = loadSettings();
     
     // Draw wheel with loaded sectors
     draw();
     updateSectorList();
     
-    // Initialize Telegram Web App and show greeting
-    await initTelegramWebApp();
-    
     // Setup auto-save listeners
     setupAutoSave();
+    
+    // Show greeting for Telegram users
+    if (isTelegramUser()) {
+        setTimeout(() => {
+            showToast(`👋 Привет, ${telegramUser.first_name}!`, 'success');
+        }, 500); // Small delay for better UX
+    }
     
     // Test sound cache after a small delay (silent test)
     setTimeout(() => {
