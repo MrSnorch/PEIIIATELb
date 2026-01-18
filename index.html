@@ -1845,10 +1845,8 @@ function showToast(message, type = 'success'){
     // Add to queue
     toastQueue.push({ message, type });
     
-    // Start processing if not already
-    if (!isToastProcessing) {
-        processToastQueue();
-    }
+    // Start processing immediately
+    processToastQueue();
 }
 
 function processToastQueue() {
@@ -1869,10 +1867,10 @@ function processToastQueue() {
             clearTimeout(window.toastTimeout);
         }
         
-        // Hide current notification if showing
+        // Hide current notification with animation
         if (toast.classList.contains('show')) {
             toast.classList.remove('show');
-            // Wait for hide animation to complete before showing new
+            // Wait for hide animation to complete (CSS transition ~0.3s)
             setTimeout(() => {
                 showQueuedToast(toast, toastMessage, toastItem);
             }, 300);
