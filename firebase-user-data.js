@@ -3,12 +3,16 @@
 // For local development, create a .env file with your Firebase config
 
 let db;
+let doc, setDoc, getDoc, collection, query, where, getDocs;
 
 // Try to initialize Firebase (will be replaced by GitHub Actions)
 try {
   // This will be replaced during deployment
   import('https://www.gstatic.com/firebasejs/10.7.0/firebase-app.js').then(({ initializeApp }) => {
-    import('https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore.js').then(({ getFirestore }) => {
+    import('https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore.js').then((firestore) => {
+      // Extract functions
+      ({ getFirestore, doc, setDoc, getDoc, collection, query, where, getDocs } = firestore);
+      
       // Configuration will be injected by GitHub Actions
       const firebaseConfig = {
         apiKey: process.env.FIREBASE_API_KEY || "placeholder",
@@ -26,6 +30,20 @@ try {
 } catch (error) {
   console.warn("Firebase not initialized:", error);
 }
+
+// Export functions for global access
+setTimeout(() => {
+  if (typeof window !== 'undefined') {
+    window.doc = doc;
+    window.setDoc = setDoc;
+    window.getDoc = getDoc;
+    window.collection = collection;
+    window.query = query;
+    window.where = where;
+    window.getDocs = getDocs;
+    window.db = db;
+  }
+}, 1000);
 
 // User Data Management Functions
 class UserDataManager {

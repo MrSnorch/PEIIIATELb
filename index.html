@@ -6,14 +6,17 @@
 <title>Решатель</title>
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
 <script type="module">
-    import { createTestData, clearTestData, db, doc, getDoc } from './firebase-user-data.js';
+    import { createTestData, clearTestData } from './firebase-user-data.js';
     
     // Make functions globally available
     window.createTestData = createTestData;
     window.clearTestData = clearTestData;
-    window.db = db;
-    window.doc = doc;
-    window.getDoc = getDoc;
+    
+    // Wait for Firebase to initialize
+    setTimeout(() => {
+        // Firebase functions will be available on window object
+        console.log("Firebase functions ready");
+    }, 1500);
 </script>
 
 <style>
@@ -2196,9 +2199,9 @@ function updateSessionStats() {
 // Test data management function
 async function toggleTestData() {
     try {
-        // Check if Firebase functions are available
-        if (typeof window.createTestData !== 'function' || typeof window.clearTestData !== 'function') {
-            showToast("❌ Firebase не загружен. Проверьте консоль.", "error");
+        // Check if Firebase is ready
+        if (!window.db || !window.doc || !window.getDoc) {
+            showToast("❌ Firebase еще не загружен. Подождите немного...", "error");
             return;
         }
         
