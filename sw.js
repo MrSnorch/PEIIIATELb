@@ -1,9 +1,11 @@
-const CACHE_NAME = 'reshatel-v2.0';
+const CACHE_NAME = 'reshatel-v2.1';
 const urlsToCache = [
   '/',
   '/index.html',
   '/manifest.json',
   '/icon.svg',
+  '/icons/icon-192x192.png',
+  '/icons/icon-512x512.png',
   '/sounds/coin.mp3',
   '/sounds/dice.mp3',
   '/sounds/wheel.mp3',
@@ -33,6 +35,33 @@ self.addEventListener('fetch', event => {
   // Skip non-GET requests
   if (event.request.method !== 'GET') return;
   
+  // For navigation requests, use network-first strategy with cache fallback
+  if (event.request.mode === 'navigate') {
+    event.respondWith(
+      fetch(event.request)
+        .then(response => {
+          // Cache successful responses
+          if (response.status === 200) {
+            const responseToCache = response.clone();
+            caches.open(CACHE_NAME)
+              .then(cache => {
+                cache.put(event.request, responseToCache);
+              });
+          }
+          return response;
+        })
+        .catch(() => {
+          // Fallback to cache when offline
+          return caches.match(event.request)
+            .then(cachedResponse => {
+              return cachedResponse || caches.match('/');
+            });
+        })
+    );
+    return;
+  }
+  
+  // For other requests, use cache-first strategy
   event.respondWith(
     caches.match(event.request)
       .then(cachedResponse => {
@@ -61,11 +90,8 @@ self.addEventListener('fetch', event => {
             return networkResponse;
           })
           .catch(() => {
-            // Fallback for offline scenarios
-            if (event.request.mode === 'navigate') {
-              return caches.match('/');
-            }
-            return new Response('Offline content not available', {
+            // Return a basic offline response
+            return new Response('Resource not available offline', {
               status: 503,
               statusText: 'Service Unavailable',
               headers: new Headers({
