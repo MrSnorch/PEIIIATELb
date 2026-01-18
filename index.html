@@ -5,7 +5,16 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>Решатель</title>
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
-<script type="module" src="firebase-user-data.js"></script>
+<script type="module">
+    import { createTestData, clearTestData, db, doc, getDoc } from './firebase-user-data.js';
+    
+    // Make functions globally available
+    window.createTestData = createTestData;
+    window.clearTestData = clearTestData;
+    window.db = db;
+    window.doc = doc;
+    window.getDoc = getDoc;
+</script>
 
 <style>
 *{box-sizing:border-box}
@@ -2187,20 +2196,30 @@ function updateSessionStats() {
 // Test data management function
 async function toggleTestData() {
     try {
+        // Check if Firebase functions are available
+        if (typeof window.createTestData !== 'function' || typeof window.clearTestData !== 'function') {
+            showToast("❌ Firebase не загружен. Проверьте консоль.", "error");
+            return;
+        }
+        
         // Check if test data exists
-        const testUserRef = doc(db, "users", "tg_123456789");
-        const testUserSnap = await getDoc(testUserRef);
+        const testUserRef = window.doc(window.db, "users", "tg_123456789");
+        const testUserSnap = await window.getDoc(testUserRef);
         
         if (testUserSnap.exists()) {
             // Test data exists - offer to delete
             if (confirm("🧪 Тестовые данные найдены. Удалить их?")) {
-                await clearTestData();
-                showToast("🧪 Тестовые данные удалены", "success");
+                const success = await window.clearTestData();
+                if (success) {
+                    showToast("🧪 Тестовые данные удалены", "success");
+                } else {
+                    showToast("❌ Ошибка удаления тестовых данных", "error");
+                }
             }
         } else {
             // No test data - create it
             if (confirm("🧪 Создать тестовые данные для демонстрации?")) {
-                const success = await createTestData();
+                const success = await window.createTestData();
                 if (success) {
                     showToast("🧪 Тестовые данные созданы успешно!", "success");
                 } else {
@@ -2210,7 +2229,7 @@ async function toggleTestData() {
         }
     } catch (error) {
         console.error("Error toggling test data:", error);
-        showToast("❌ Ошибка работы с тестовыми данными", "error");
+        showToast("❌ Ошибка работы с тестовыми данными: " + error.message, "error");
     }
 }
 
