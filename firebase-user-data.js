@@ -1,20 +1,31 @@
 // Firebase Configuration for User Data Storage
-import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.0/firebase-app.js';
-import { getFirestore, doc, setDoc, getDoc, collection, query, where, getDocs } from 'https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore.js';
+// This file will be dynamically configured by GitHub Actions
+// For local development, create a .env file with your Firebase config
 
-// Your web app's Firebase configuration
-const firebaseConfig = {
-  apiKey: "AIzaSyDNibAES2EnrISueTuUcbJRuRhaXdnrCTE",
-  authDomain: "peiiiatelb.firebaseapp.com",
-  projectId: "peiiiatelb",
-  storageBucket: "peiiiatelb.firebasestorage.app",
-  messagingSenderId: "130685350684",
-  appId: "1:130685350684:web:b203789666a9c4ca4c00d9"
-};
+let db;
 
-// Initialize Firebase
-const app = initializeApp(firebaseConfig);
-const db = getFirestore(app);
+// Try to initialize Firebase (will be replaced by GitHub Actions)
+try {
+  // This will be replaced during deployment
+  import('https://www.gstatic.com/firebasejs/10.7.0/firebase-app.js').then(({ initializeApp }) => {
+    import('https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore.js').then(({ getFirestore }) => {
+      // Configuration will be injected by GitHub Actions
+      const firebaseConfig = {
+        apiKey: process.env.FIREBASE_API_KEY || "placeholder",
+        authDomain: "peiiiatelb.firebaseapp.com",
+        projectId: "peiiiatelb",
+        storageBucket: "peiiiatelb.firebasestorage.app",
+        messagingSenderId: "130685350684",
+        appId: "1:130685350684:web:b203789666a9c4ca4c00d9"
+      };
+      
+      const app = initializeApp(firebaseConfig);
+      db = getFirestore(app);
+    });
+  });
+} catch (error) {
+  console.warn("Firebase not initialized:", error);
+}
 
 // User Data Management Functions
 class UserDataManager {
