@@ -947,6 +947,139 @@ canvas{
     font-size:13px;
     padding:10px;
 }
+
+/* Blue Screen of Death */
+#bsod-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: #0000aa;
+    color: white;
+    font-family: 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
+    font-size: 16px;
+    line-height: 1.4;
+    z-index: 10000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: left;
+    padding: 20px;
+    box-sizing: border-box;
+    overflow: hidden;
+}
+
+.bsod-content {
+    max-width: 800px;
+    width: 100%;
+}
+
+.bsod-header {
+    font-size: 100px;
+    font-weight: lighter;
+    margin-bottom: 20px;
+    color: #ffffff;
+    line-height: 1;
+}
+
+.bsod-subheader {
+    font-size: 20px;
+    margin-bottom: 15px;
+    color: #ffffff;
+    font-weight: 300;
+}
+
+.bsod-progress {
+    font-size: 18px;
+    margin-bottom: 25px;
+    color: #ffffff;
+}
+
+.bsod-stop-code {
+    font-size: 16px;
+    margin-bottom: 25px;
+    color: #cccccc;
+}
+
+.bsod-technical {
+    font-size: 16px;
+    margin-bottom: 8px;
+    color: #ffffff;
+    font-weight: bold;
+}
+
+.bsod-error, .bsod-driver, .bsod-memory {
+    font-size: 16px;
+    margin-bottom: 8px;
+    color: #ffffff;
+    font-family: 'Consolas', 'Courier New', monospace;
+}
+
+.bsod-dump, .bsod-begin, .bsod-complete, .bsod-finish, .bsod-contact {
+    font-size: 16px;
+    margin-bottom: 8px;
+    color: #ffffff;
+}
+
+/* Mobile responsiveness */
+@media (max-width: 768px) {
+    #bsod-overlay {
+        padding: 15px;
+    }
+    
+    .bsod-header {
+        font-size: 70px;
+        margin-bottom: 15px;
+    }
+    
+    .bsod-subheader {
+        font-size: 16px;
+        margin-bottom: 12px;
+    }
+    
+    .bsod-progress {
+        font-size: 15px;
+        margin-bottom: 20px;
+    }
+    
+    .bsod-content {
+        max-width: 100%;
+    }
+    
+    .bsod-error, .bsod-driver, .bsod-memory, 
+    .bsod-dump, .bsod-begin, .bsod-complete, 
+    .bsod-finish, .bsod-contact {
+        font-size: 14px;
+    }
+}
+
+@media (max-width: 480px) {
+    #bsod-overlay {
+        padding: 10px;
+    }
+    
+    .bsod-header {
+        font-size: 50px;
+        margin-bottom: 10px;
+    }
+    
+    .bsod-subheader {
+        font-size: 14px;
+        margin-bottom: 10px;
+    }
+    
+    .bsod-progress {
+        font-size: 14px;
+        margin-bottom: 15px;
+    }
+    
+    .bsod-error, .bsod-driver, .bsod-memory, 
+    .bsod-dump, .bsod-begin, .bsod-complete, 
+    .bsod-finish, .bsod-contact {
+        font-size: 12px;
+    }
+}
 </style>
 </head>
 
@@ -1058,6 +1191,7 @@ canvas{
 <audio id="sndWheel" src="sounds/wheel.mp3" preload="auto"></audio>
 <audio id="sndBell"  src="sounds/bell.mp3" preload="auto"></audio>
 <audio id="sndClick" src="sounds/click.mp3" preload="auto"></audio>
+<audio id="sndBSOD"  src="sounds/screen.mp3" preload="auto"></audio>
 
 <!-- Toast Notification -->
 <div class="toast-notification" id="toastNotification">
@@ -1451,6 +1585,12 @@ function formatLink(text){
 let soundEnabled=true;
 let audioCache = {};
 
+// Blue Screen of Death variables
+let coinClickTimes = [];
+const CLICK_THRESHOLD = 10; // Number of clicks
+const TIME_WINDOW = 2000; // Time window in milliseconds (2 seconds)
+let bsodActive = false;
+
 // Preload and cache all sounds
 function preloadSounds() {
     const soundFiles = [
@@ -1458,7 +1598,8 @@ function preloadSounds() {
         { id: 'sndDice', src: 'sounds/dice.mp3' },
         { id: 'sndWheel', src: 'sounds/wheel.mp3' },
         { id: 'sndBell', src: 'sounds/bell.mp3' },
-        { id: 'sndClick', src: 'sounds/click.mp3' }
+        { id: 'sndClick', src: 'sounds/click.mp3' },
+        { id: 'sndBSOD', src: 'sounds/screen.mp3' }
     ];
     
     soundFiles.forEach(sound => {
@@ -1517,6 +1658,7 @@ const sndDice = getCachedSound('sndDice');
 const sndWheel = getCachedSound('sndWheel');
 const sndBell = getCachedSound('sndBell');
 const sndClick = getCachedSound('sndClick');
+const sndBSOD = getCachedSound('sndBSOD');
 
 function toggleSound(){
     soundEnabled=!soundEnabled;
@@ -1595,6 +1737,9 @@ function playBellWithFade() {
 
 /* COIN */
 function coinFlip(){
+    // Check for rapid clicking (Blue Screen of Death trigger)
+    checkRapidCoinClicks();
+    
     document.getElementById('coinLog').classList.remove('show');
     coin.classList.remove('toss');void coin.offsetWidth;coin.classList.add('toss');
     play(sndCoin);
@@ -2146,6 +2291,74 @@ addSector = function(){
     originalAddSector();
     updateSectorList();
 };
+
+// Blue Screen of Death functions
+function checkRapidCoinClicks() {
+    if (bsodActive) return;
+    
+    const now = Date.now();
+    coinClickTimes.push(now);
+    
+    // Remove clicks older than TIME_WINDOW
+    coinClickTimes = coinClickTimes.filter(time => now - time <= TIME_WINDOW);
+    
+    // Check if threshold is met
+    if (coinClickTimes.length >= CLICK_THRESHOLD) {
+        showBlueScreenOfDeath();
+    }
+}
+
+function showBlueScreenOfDeath() {
+    if (bsodActive) return;
+    bsodActive = true;
+    
+    // Play BSOD sound immediately
+    playCached(sndBSOD);
+    
+    // Show BSOD screen 0.3 seconds after sound
+    setTimeout(() => {
+        // Create BSOD overlay
+        const bsod = document.createElement('div');
+        bsod.id = 'bsod-overlay';
+        bsod.innerHTML = `
+            <div class="bsod-content">
+                <div class="bsod-header">:(</div>
+                <div class="bsod-subheader">Your PC ran into a problem and needs to restart. We're just collecting some error info, and then we'll restart for you.</div>
+                <div class="bsod-progress">0% complete</div>
+                <br>
+                <div class="bsod-stop-code">If you'd like to know more, you can search online later for this error: SYSTEM_THREAD_EXCEPTION_NOT_HANDLED</div>
+                <br>
+                <div class="bsod-technical">Technical information:</div>
+                <div class="bsod-error">*** STOP 0x0000003B (0x00000000, 0x00000000, 0x00000000, 0x00000000)</div>
+                <div class="bsod-driver">*** Coin_Flip_Driver+0x00000001</div>
+                <br>
+                <div class="bsod-memory">*** Address fffff80002c01000 base at fffff80002c00000, DateStamp 525f3b1e</div>
+                <br>
+                <div class="bsod-dump">Collecting data for crash dump...</div>
+                <div class="bsod-begin">Begin dump of physical memory</div>
+                <div class="bsod-complete">Dumping physical memory to disk: 100%</div>
+                <div class="bsod-finish">Physical memory dump complete.</div>
+                <div class="bsod-contact">Contact your system administrator or technical support group.</div>
+            </div>
+        `;
+        
+        document.body.appendChild(bsod);
+    }, 300);
+    
+    // Auto restart after 5.3 seconds total (5s after visual appears)
+    setTimeout(() => {
+        hideBlueScreenOfDeath();
+    }, 5300);
+}
+
+function hideBlueScreenOfDeath() {
+    const bsod = document.getElementById('bsod-overlay');
+    if (bsod) {
+        bsod.remove();
+    }
+    bsodActive = false;
+    coinClickTimes = []; // Reset click counter
+}
 </script>
 </body>
 </html>
