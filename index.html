@@ -2,7 +2,7 @@
 <html lang="ru">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
 <title>Решатель</title>
 <!-- Telegram Web App -->
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
@@ -974,6 +974,13 @@ canvas{
     -moz-user-select: none;
     -ms-user-select: none;
     cursor: default;
+    
+    /* iOS Safari fixes */
+    -webkit-touch-callout: none;
+    -webkit-tap-highlight-color: transparent;
+    
+    /* Force fullscreen on mobile */
+    touch-action: none;
 }
 
 .bsod-content {
@@ -2388,6 +2395,18 @@ function showBlueScreenOfDeath() {
     if (bsodActive) return;
     bsodActive = true;
     
+    // iOS Safari fullscreen hack
+    if (/iPad|iPhone|iPod/.test(navigator.userAgent)) {
+        // Scroll to top and disable scrolling
+        window.scrollTo(0, 0);
+        document.body.style.overflow = 'hidden';
+        
+        // Hide address bar
+        setTimeout(() => {
+            window.scrollTo(0, 1);
+        }, 100);
+    }
+    
     // Play BSOD sound immediately
     playCached(sndBSOD);
     
@@ -2438,6 +2457,12 @@ function hideBlueScreenOfDeath() {
     if (bsod) {
         bsod.remove();
     }
+    
+    // Restore normal scrolling on iOS
+    if (/iPad|iPhone|iPod/.test(navigator.userAgent)) {
+        document.body.style.overflow = '';
+    }
+    
     bsodActive = false;
     coinClickTimes = []; // Reset click counter
 }
