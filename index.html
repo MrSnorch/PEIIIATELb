@@ -968,6 +968,12 @@ canvas{
     padding: 20px;
     box-sizing: border-box;
     overflow: hidden;
+    /* Prevent text selection */
+    user-select: none;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    cursor: default;
 }
 
 .bsod-content {
@@ -2390,6 +2396,12 @@ function showBlueScreenOfDeath() {
         // Create BSOD overlay
         const bsod = document.createElement('div');
         bsod.id = 'bsod-overlay';
+        
+        // Add event listeners to prevent text selection
+        bsod.addEventListener('selectstart', (e) => e.preventDefault());
+        bsod.addEventListener('mousedown', (e) => e.preventDefault());
+        bsod.addEventListener('contextmenu', (e) => e.preventDefault());
+        
         bsod.innerHTML = `
             <div class="bsod-content">
                 <div class="bsod-header">:(</div>
