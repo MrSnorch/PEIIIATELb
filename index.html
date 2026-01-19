@@ -1080,6 +1080,56 @@ canvas{
         font-size: 12px;
     }
 }
+
+/* Rickroll Modal */
+#rickroll-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.95);
+    display: none;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    z-index: 10001;
+}
+
+.rickroll-video-container {
+    position: relative;
+    width: 90%;
+    max-width: 800px;
+    height: 70vh;
+}
+
+.rickroll-video {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    border-radius: 8px;
+    /* Disable all user interactions */
+    pointer-events: none;
+    user-select: none;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+}
+
+/* Mobile responsive for Rickroll */
+@media (max-width: 768px) {
+    .rickroll-video-container {
+        width: 95%;
+        height: 60vh;
+    }
+}
+
+@media (max-width: 480px) {
+    .rickroll-video-container {
+        width: 98%;
+        height: 50vh;
+    }
+}
 </style>
 </head>
 
@@ -1192,10 +1242,20 @@ canvas{
 <audio id="sndBell"  src="sounds/bell.mp3" preload="auto"></audio>
 <audio id="sndClick" src="sounds/click.mp3" preload="auto"></audio>
 <audio id="sndBSOD"  src="sounds/screen.mp3" preload="auto"></audio>
+<video id="rickrollVideo" src="sounds/roll.mp4" preload="auto" style="display:none;"></video>
 
 <!-- Toast Notification -->
 <div class="toast-notification" id="toastNotification">
     <p class="toast-message" id="toastMessage"></p>
+</div>
+
+<!-- Rickroll Modal -->
+<div id="rickroll-modal">
+    <div class="rickroll-video-container">
+        <video id="rickroll-video" class="rickroll-video" autoplay>
+            Your browser does not support the video tag.
+        </video>
+    </div>
 </div>
 
 <script>
@@ -1591,6 +1651,12 @@ const CLICK_THRESHOLD = 10; // Number of clicks
 const TIME_WINDOW = 2000; // Time window in milliseconds (2 seconds)
 let bsodActive = false;
 
+// Rickroll variables for dice
+let diceClickTimes = [];
+const DICE_CLICK_THRESHOLD = 8; // Number of clicks for dice
+const DICE_TIME_WINDOW = 1500; // Time window for dice (1.5 seconds)
+let rickrollActive = false;
+
 // Preload and cache all sounds
 function preloadSounds() {
     const soundFiles = [
@@ -1763,6 +1829,9 @@ function coinFlip(){
 
 /* DICE */
 function rollDice(){
+    // Check for rapid clicking (Rickroll trigger)
+    checkRapidDiceClicks();
+    
     document.getElementById('diceLog').classList.remove('show');
     dice.classList.remove('roll');void dice.offsetWidth;dice.classList.add('roll');
     play(sndDice);
@@ -2358,6 +2427,103 @@ function hideBlueScreenOfDeath() {
     }
     bsodActive = false;
     coinClickTimes = []; // Reset click counter
+}
+
+// Rickroll functions
+function checkRapidDiceClicks() {
+    if (rickrollActive) return;
+    
+    const now = Date.now();
+    diceClickTimes.push(now);
+    
+    // Remove clicks older than TIME_WINDOW
+    diceClickTimes = diceClickTimes.filter(time => now - time <= DICE_TIME_WINDOW);
+    
+    // Check if threshold is met
+    if (diceClickTimes.length >= DICE_CLICK_THRESHOLD) {
+        showRickroll();
+    }
+}
+
+function showRickroll() {
+    if (rickrollActive) return;
+    rickrollActive = true;
+    
+    const modal = document.getElementById('rickroll-modal');
+    const video = document.getElementById('rickroll-video');
+    
+    if (modal && video) {
+        // Reset video completely before new playback
+        video.pause();
+        video.currentTime = 0;
+        video.src = '';
+        
+        // Set video source
+        video.src = 'sounds/roll.mp4';
+        
+        // Disable video controls and interactions
+        video.controls = false;
+        video.disablePictureInPicture = true;
+        video.playsInline = true;
+        
+        // Block context menu and keyboard shortcuts
+        video.addEventListener('contextmenu', (e) => e.preventDefault());
+        video.addEventListener('keydown', (e) => e.preventDefault());
+        video.addEventListener('pause', (e) => {
+            // Prevent pausing - continue playing
+            if (!video.ended) {
+                video.play().catch(() => {});
+            }
+        });
+        
+        // Show modal
+        modal.style.display = 'flex';
+        
+        // Play video with sound
+        video.play().catch(e => {
+            console.log('Video play failed:', e);
+            // Fallback: show error message
+            showToast('🎥 Видео не доступно', 'error');
+            closeRickroll();
+        });
+        
+        // Auto close after video ends or 30 seconds
+        video.onended = closeRickroll;
+        setTimeout(closeRickroll, 30000);
+    }
+}
+
+function closeRickroll() {
+    const modal = document.getElementById('rickroll-modal');
+    const video = document.getElementById('rickroll-video');
+    
+    if (modal) {
+        modal.style.display = 'none';
+    }
+    
+    if (video) {
+        // Completely stop the video
+        video.pause();
+        video.currentTime = 0;
+        video.src = '';
+        
+        // Remove all event listeners
+        video.removeEventListener('contextmenu', (e) => e.preventDefault());
+        video.removeEventListener('keydown', (e) => e.preventDefault());
+        video.removeEventListener('pause', (e) => {
+            if (!video.ended) {
+                video.play().catch(() => {});
+            }
+        });
+        
+        // Reset video properties
+        video.controls = false;
+        video.disablePictureInPicture = false;
+        video.playsInline = false;
+    }
+    
+    rickrollActive = false;
+    diceClickTimes = []; // Reset click counter
 }
 </script>
 </body>
