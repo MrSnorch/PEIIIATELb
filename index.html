@@ -1656,6 +1656,7 @@ let diceClickTimes = [];
 const DICE_CLICK_THRESHOLD = 8; // Number of clicks for dice
 const DICE_TIME_WINDOW = 1500; // Time window for dice (1.5 seconds)
 let rickrollActive = false;
+let rickrollCheckTimeout = null;
 
 // Preload and cache all sounds
 function preloadSounds() {
@@ -2439,14 +2440,35 @@ function checkRapidDiceClicks() {
     // Remove clicks older than TIME_WINDOW
     diceClickTimes = diceClickTimes.filter(time => now - time <= DICE_TIME_WINDOW);
     
+    // Clear any existing timeout
+    if (rickrollCheckTimeout) {
+        clearTimeout(rickrollCheckTimeout);
+    }
+    
     // Check if threshold is met
     if (diceClickTimes.length >= DICE_CLICK_THRESHOLD) {
-        showRickroll();
+        // Add small delay to ensure proper triggering
+        rickrollCheckTimeout = setTimeout(() => {
+            if (!rickrollActive && diceClickTimes.length >= DICE_CLICK_THRESHOLD) {
+                showRickroll();
+            }
+        }, 100);
+    } else {
+        // Reset if not enough clicks within window
+        rickrollCheckTimeout = setTimeout(() => {
+            diceClickTimes = [];
+        }, DICE_TIME_WINDOW);
     }
 }
 
 function showRickroll() {
-    if (rickrollActive) return;
+    console.log('🎬 Showing Rickroll');
+    
+    if (rickrollActive) {
+        console.log('Rickroll already active');
+        return;
+    }
+    
     rickrollActive = true;
     
     const modal = document.getElementById('rickroll-modal');
@@ -2480,22 +2502,37 @@ function showRickroll() {
         modal.style.display = 'flex';
         
         // Play video with sound
-        video.play().catch(e => {
-            console.log('Video play failed:', e);
-            // Fallback: show error message
-            showToast('🎥 Видео не доступно', 'error');
-            closeRickroll();
-        });
+        const playPromise = video.play();
+        if (playPromise !== undefined) {
+            playPromise.catch(e => {
+                console.log('Video play failed:', e);
+                // Fallback: show error message
+                showToast('🎥 Видео не доступно', 'error');
+                closeRickroll();
+            });
+        }
         
         // Auto close after video ends or 30 seconds
-        video.onended = closeRickroll;
-        setTimeout(closeRickroll, 30000);
+        video.onended = () => {
+            console.log('Video ended');
+            closeRickroll();
+        };
+        setTimeout(() => {
+            console.log('Rickroll timeout');
+            closeRickroll();
+        }, 30000);
     }
 }
 
 function closeRickroll() {
     const modal = document.getElementById('rickroll-modal');
     const video = document.getElementById('rickroll-video');
+    
+    // Clear any pending timeouts
+    if (rickrollCheckTimeout) {
+        clearTimeout(rickrollCheckTimeout);
+        rickrollCheckTimeout = null;
+    }
     
     if (modal) {
         modal.style.display = 'none';
@@ -2508,18 +2545,8 @@ function closeRickroll() {
         video.src = '';
         
         // Remove all event listeners
-        video.removeEventListener('contextmenu', (e) => e.preventDefault());
-        video.removeEventListener('keydown', (e) => e.preventDefault());
-        video.removeEventListener('pause', (e) => {
-            if (!video.ended) {
-                video.play().catch(() => {});
-            }
-        });
-        
-        // Reset video properties
-        video.controls = false;
-        video.disablePictureInPicture = false;
-        video.playsInline = false;
+        const clone = video.cloneNode(true);
+        video.parentNode.replaceChild(clone, video);
     }
     
     rickrollActive = false;
